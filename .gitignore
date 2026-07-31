@@ -1,0 +1,48 @@
+# ======================
+# OS / Editor
+# ======================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# ======================
+# Logs
+# ======================
+*.log
+logs/
+
+# ======================
+# Environment variables / secrets
+# ======================
+
+.env
+.env.*
+!.env.example
+
+# ======================
+# Spring Boot / Java / Maven
+# ======================
+backend/target/
+backend/*.jar
+backend/*.war
+backend/*.ear
+
+# Local database config with password
+backend/src/main/resources/application-dev.properties
+backend/src/main/resources/application-prod.properties
+# ======================
+# React / Vite / Node
+# ======================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ======================
+# Build / cache
+# ======================
+*.class
