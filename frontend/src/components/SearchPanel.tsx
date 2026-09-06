@@ -1,28 +1,27 @@
-import {useState, type SubmitEvent} from 'react'
-
-type Sport = 'Badminton' | 'Pickleball'
+import { useState, type SubmitEvent } from 'react'
+import type { Sport } from '../types/venues'
 
 const sports: Sport[] = [
-    'Badminton',
-    'Pickleball',
+  'Badminton',
+  'Pickleball',
 ]
 
 
-function SearchPanel(){
-//useState
-const [location,setLocation] = useState('Sungai Buloh')
-const [sport,setSport] = useState<Sport>('Badminton')
-const [date,setDate] = useState('2026-09-06')
-const [hasSearched,setHasSearched] = useState(false)
+function SearchPanel() {
+    //useState
+    const [location, setLocation] = useState('Sungai Buloh')
+    const [sport, setSport] = useState<Sport>('Badminton')
+    const [date, setDate] = useState('2026-09-06')
+    const [hasSearched, setHasSearched] = useState(false)
 
-function handleSearch(event: SubmitEvent<HTMLFormElement>){
-    event.preventDefault()
-    setHasSearched(true)
-}
+    function handleSearch(event: SubmitEvent<HTMLFormElement>) {
+        event.preventDefault()
+        setHasSearched(true)
+    }
 
-    return(<section id="find-court" className="search-section">
+    return (<section id="find-court" className="search-section">
         <div className="search-content">
-            <p className ="search-eyebrow">
+            <p className="search-eyebrow">
                 Badminton & Pickleball
             </p>
 
@@ -35,25 +34,25 @@ function handleSearch(event: SubmitEvent<HTMLFormElement>){
             </p>
 
             <form
-            className="search-form"
-            onSubmit={handleSearch}
+                className="search-form"
+                onSubmit={handleSearch}
             >
                 <label className="search-field">
                     <span>Location</span>
-                    <select value={location} onChange={(event)=>setLocation(event.target.value)}>
+                    <select value={location} onChange={(event) => setLocation(event.target.value)}>
                         <option value="Sungai Buloh">
                             Sungai Buloh
                         </option>
-                        <option value = "Kota Damansara">
+                        <option value="Kota Damansara">
                             Kota Damansara
                         </option>
-                        <option value = "Desa Park City">
+                        <option value="Desa Park City">
                             Desa Park City
                         </option>
                     </select>
-                    
+
                 </label>
-                
+
                 <label className="search-field">
                     <span>Sport</span>
 
@@ -68,16 +67,16 @@ function handleSearch(event: SubmitEvent<HTMLFormElement>){
                         ))}
                     </select>
                 </label>
-                
+
                 <label className="search-field">
                     <span>Date</span>
 
                     <input
-                    type="date"
-                    value={date}
-                    onChange={(event)=>
-                        setDate(event.target.value)
-                    }
+                        type="date"
+                        value={date}
+                        onChange={(event) =>
+                            setDate(event.target.value)
+                        }
                     />
 
                 </label>
@@ -87,7 +86,7 @@ function handleSearch(event: SubmitEvent<HTMLFormElement>){
                 </button>
             </form>
 
-            {hasSearched&&(
+            {hasSearched && (
                 <div className="search-result">
                     <strong>
                         Searching for {sport} courts
@@ -95,7 +94,7 @@ function handleSearch(event: SubmitEvent<HTMLFormElement>){
                     <span>
                         {location} - {date}
                     </span>
-                    </div>
+                </div>
             )}
         </div>
     </section>
