@@ -2,9 +2,10 @@ import type { Venue } from '../types/venues'
 
 type VenueCardProps = {
     venue: Venue
+    onViewTimes:(venue:Venue)=>void
 }
 
-function VenueCard({ venue }: VenueCardProps) {
+function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
     return (
         <article className="venue-card">
             <div className="venue-cover">
@@ -35,7 +36,9 @@ function VenueCard({ venue }: VenueCardProps) {
                 </div>
                 <div className="venue-card-footer">
                     <p>From{' '} <strong> RM {venue.pricePerHour}/hour</strong></p>
-                    <button type="button">
+                    <button type="button"
+                        disabled={!venue.isOpen}
+                            onClick={()=> onViewTimes(venue)}>
                         View Times
                     </button>
                 </div>
