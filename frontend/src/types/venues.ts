@@ -9,4 +9,5 @@ export type Venue = {
     sports:Sport[]
     pricePerHour:number
     isOpen:boolean
+    imageUrl:string
 }

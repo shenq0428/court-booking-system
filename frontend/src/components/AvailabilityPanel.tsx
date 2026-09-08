@@ -1,5 +1,6 @@
 import { useState, type SubmitEvent } from 'react'
 import type { Venue } from '../types/venues'
+import { Trophy, MapPin, CalendarDays, Clock3, } from 'lucide-react'
 
 type AvailabilityPanelProps = {
     venue: Venue
@@ -41,6 +42,9 @@ function AvailabilityPanel({ venue, }: AvailabilityPanelProps) {
     const [customerPhone, setCustomerPhone] = useState('')
     //是否已经模拟提交
     const [bookingSubmitted, setBookingSubmitted] = useState(false)
+    //拒绝非登录用户付费
+    const isAuthenticated = false
+    const [authError, setAuthError] = useState<string | null>(null)
 
 
     function handleSlotSelect(
@@ -55,6 +59,16 @@ function AvailabilityPanel({ venue, }: AvailabilityPanelProps) {
         setBookingSubmitted(false)
         setCustomerName('')
         setCustomerPhone('')
+        setAuthError(null)
+    }
+
+    function handleContinueBooking() {
+        if (!isAuthenticated) {
+            setAuthError('Please log in before continuing your booking.',)
+            return
+        }
+        setAuthError(null)
+        setIsBookingFormOpen(true)
     }
 
     function handleBookingSubmit(event: SubmitEvent<HTMLFormElement>,) {
@@ -113,11 +127,10 @@ function AvailabilityPanel({ venue, }: AvailabilityPanelProps) {
                 ) : (
                     <>
                         <div className="summary-venue">
-                            <div className="summary-venue-image"
-                                aria-hidden="true"
-                            >
-                                {venue.name.charAt(1)}
-                            </div>
+                            <img className="summary-venue-image"
+                                src={venue.imageUrl}
+                                alt={`${venue.name} indoor courts`}
+                            />
                             <div className="summary-venue-details">
                                 <strong>{venue.name}</strong>
                                 <strong>{venue.address}</strong>
@@ -125,24 +138,39 @@ function AvailabilityPanel({ venue, }: AvailabilityPanelProps) {
                         </div>
 
                         <div className="summary-divider" />
+
                         <div className="summary-details">
                             <div>
-                                <span className="summary-icon">♙</span>
+                                <Trophy
+                                    className="summary-icon"
+                                    size={18}
+                                    aria-hidden="true" />
                                 <span>{venue.sports.join(' & ')}</span>
                             </div>
 
                             <div>
-                                <span className="summary-icon">◉</span>
+                                <MapPin
+                                    className="summary-icon"
+                                    size={18}
+                                    aria-hidden="true" />
                                 <span>Court {selectedSlot.courtNumber}</span>
                             </div>
 
                             <div>
-                                <span className="summary-icon">▣</span>
+                                <CalendarDays
+                                    className="summary-icon"
+                                    size={18}
+                                    aria-hidden="true"
+                                />
                                 <span>{selectedDateLabel}</span>
                             </div>
 
                             <div>
-                                <span className="summary-icon">◷</span>
+                                <Clock3
+                                    className="summary-icon"
+                                    size={18}
+                                    aria-hidden="true"
+                                />
                                 <span>
                                     {timeRangeLabels[selectedSlot.time]}
                                 </span>
@@ -159,9 +187,13 @@ function AvailabilityPanel({ venue, }: AvailabilityPanelProps) {
                             <>
                                 <button className="summary-continue-button"
                                     type="button"
-                                    onClick={() => setIsBookingFormOpen(true)}>
+                                    onClick={handleContinueBooking}>
                                     Continue Booking →
                                 </button>
+                                {authError&&(<div className="auth-required-message"
+                                role="alert">
+                                    {authError}
+                                </div>)}
                                 <p className="summary-note"> ♢ No payment required in this demo</p>
                             </>
                         )}

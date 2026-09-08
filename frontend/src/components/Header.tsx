@@ -1,20 +1,67 @@
+import { Link, NavLink, } from 'react-router'
+
 function Header() {
+    const isAuthenticated = false
+
     return (
         <header className="site-header">
             <div className="header-inner">
-                <a href="/" aria-label="CourtFlow Home">
+                <Link
+                    className="brand"
+                    to="/"
+                    aria-label="CourtFlow home"
+                >
                     Court<span>Flow</span>
-                </a>
+                </Link>
 
+                <nav
+                    className="main-nav"
+                    aria-label="Main navigation"
+                >
+                    <NavLink to="/#find-court"
+                        className={({ isActive }) =>
+                            isActive ? 'active' : undefined
+                        }
+                    >
+                        Find a Court
+                    </NavLink>
 
-                <nav className="main-nav" aria-label="Main navigation">
-                    <a className="active" href="#find-court">find a Court</a>
-                    <a href="#my-bookings">My bookings</a>
+                    <Link
+                        to="/login"
+                        state={{
+                            returnTo: '/my-bookings',
+                        }}
+                    >
+                        My bookings
+                    </Link>
                 </nav>
 
-                <button className="sign-in-button" type="button">Sign in</button>
+                {!isAuthenticated?(<div className="header-auth-actions">
+                    <Link
+                        className="header-login-link"
+                        to="/login"
+                    >
+                        Log in
+                    </Link>
+
+                    <Link
+                        className="sign-in-button"
+                        to="/register"
+                    >
+                        Register
+                    </Link>
+                </div>):(
+                    <div className="header-user-actions">
+                        <span>My account</span>
+
+                        <button type="button">
+                            Log out
+                        </button>
+                    </div>
+                )}
             </div>
         </header>
     )
 }
+
 export default Header

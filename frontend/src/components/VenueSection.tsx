@@ -2,6 +2,7 @@ import VenueCard from './VenueCard'
 import type { Venue } from '../types/venues'
 import { useState } from 'react'
 import AvailabilityPanel from './AvailabilityPanel'
+import sungaiBulohCourtImage from "../assets/venues/sungai-buloh-court.png"
 
 const venues: Venue[] = [{
     id: 1,
@@ -10,6 +11,7 @@ const venues: Venue[] = [{
     sports: ['Badminton', 'Pickleball'],
     pricePerHour: 18,
     isOpen: true,
+    imageUrl: sungaiBulohCourtImage,
 }, {
     id: 2,
     name: 'CourtFlow Kota Damansara',
@@ -17,6 +19,7 @@ const venues: Venue[] = [{
     sports: ['Badminton'],
     pricePerHour: 22,
     isOpen: true,
+    imageUrl: sungaiBulohCourtImage,
 }, {
     id: 3,
     name: 'CourtFlow Desa ParkCity',
@@ -24,6 +27,7 @@ const venues: Venue[] = [{
     sports: ['Badminton', 'Pickleball'],
     pricePerHour: 20,
     isOpen: false,
+    imageUrl: sungaiBulohCourtImage,
 },]
 
 function VenueSection() {
