@@ -27,7 +27,7 @@ function Header() {
                     </NavLink>
 
                     <Link
-                        to="/login"
+                        to="/#find-court"
                         state={{
                             returnTo: '/my-bookings',
                         }}
