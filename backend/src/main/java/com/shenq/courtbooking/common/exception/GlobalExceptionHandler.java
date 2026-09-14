@@ -16,7 +16,25 @@ public class GlobalExceptionHandler {
         EmailAlreadyRegisteredException exception,
             HttpServletRequest request
     ){
-        HttpStatus status = HttpStatus.CONFLICT;
+        HttpStatus status = HttpStatus.CONFLICT;//409
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                Instant.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+     @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;//401
 
         ApiErrorResponse response = new ApiErrorResponse(
                 Instant.now(),

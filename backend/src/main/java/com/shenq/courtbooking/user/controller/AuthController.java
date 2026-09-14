@@ -3,6 +3,8 @@ package com.shenq.courtbooking.user.controller;
 import com.shenq.courtbooking.user.dto.RegisterRequest;
 import com.shenq.courtbooking.user.dto.RegisterResponse;
 import com.shenq.courtbooking.user.service.AuthService;
+import com.shenq.courtbooking.user.dto.LoginRequest;
+import com.shenq.courtbooking.user.dto.LoginResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,5 +29,13 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
+    
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse>login(
+        @Valid @RequestBody LoginRequest request){
+            LoginResponse response = authService.login(request);
+            
+            return ResponseEntity.ok(response);
+        }
+    
 }
