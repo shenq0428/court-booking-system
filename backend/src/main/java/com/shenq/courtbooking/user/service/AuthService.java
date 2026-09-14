@@ -1,7 +1,5 @@
 package com.shenq.courtbooking.user.service;
 
-
-
 import com.shenq.courtbooking.common.exception.EmailAlreadyRegisteredException;
 import com.shenq.courtbooking.user.dto.RegisterRequest;
 import com.shenq.courtbooking.user.dto.RegisterResponse;
@@ -12,99 +10,109 @@ import com.shenq.courtbooking.common.exception.InvalidCredentialsException;
 import com.shenq.courtbooking.security.JwtService;
 import com.shenq.courtbooking.user.dto.LoginRequest;
 import com.shenq.courtbooking.user.dto.LoginResponse;
+import com.shenq.courtbooking.user.dto.CurrentUserResponse;
+
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.Locale;
 
 @Service
-public class AuthService{
+public class AuthService {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public AuthService(
-        AppUserRepository appUserRepository, 
-        PasswordEncoder passwordEncoder,
-        JwtService jwtService
-    ){
+            AppUserRepository appUserRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
         this.appUserRepository = appUserRepository;
-        this.passwordEncoder = passwordEncoder;  
-        this.jwtService=jwtService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
-    public RegisterResponse register(RegisterRequest request){
-        String normalizedName= request.name().trim();
+    public RegisterResponse register(RegisterRequest request) {
+        String normalizedName = request.name().trim();
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
 
-        //检查重复email
-        if(appUserRepository.existsByEmailIgnoreCase(normalizedEmail)){
+        // 检查重复email
+        if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyRegisteredException(
-                "Email is already registerd T_T" 
-            );
+                    "Email is already registerd T_T");
         }
 
         String passwordHash = passwordEncoder.encode(request.password());
 
-        AppUser appUser = new AppUser(normalizedName,normalizedEmail,passwordHash,UserRole.CUSTOMER);
-        
+        AppUser appUser = new AppUser(normalizedName, normalizedEmail, passwordHash, UserRole.CUSTOMER);
+
         AppUser savedUser = appUserRepository.save(appUser);
 
         return new RegisterResponse(
-            savedUser.getId(),
-            savedUser.getName(),
-            savedUser.getEmail(),
-            savedUser.getRole()
-        );
+                savedUser.getId(),
+                savedUser.getName(),
+                savedUser.getEmail(),
+                savedUser.getRole());
     }
 
     @Transactional(readOnly = true)
-public LoginResponse login(LoginRequest request) {
-    String normalizedEmail = request
-            .email()
-            .trim()
-            .toLowerCase(Locale.ROOT);
+    public LoginResponse login(LoginRequest request) {
+        String normalizedEmail = request
+                .email()
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
-    AppUser appUser = appUserRepository
-            .findByEmailIgnoreCase(normalizedEmail)
-            .orElseThrow(() ->
-                    new InvalidCredentialsException(
-                            "Invalid email or password"
-                    )
-            );
+        AppUser appUser = appUserRepository
+                .findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() -> new InvalidCredentialsException(
+                        "Invalid email or password"));
 
-    if (!appUser.isActive()) {
-        throw new InvalidCredentialsException(
-                "Invalid email or password"
-        );
+        if (!appUser.isActive()) {
+            throw new InvalidCredentialsException(
+                    "Invalid email or password");
+        }
+
+        boolean passwordMatches = passwordEncoder.matches(
+                request.password(),
+                appUser.getPasswordHash());
+
+        if (!passwordMatches) {
+            throw new InvalidCredentialsException(
+                    "Invalid email or password");
+        }
+
+        String accessToken = jwtService.generateAccessToken(appUser);
+
+        return new LoginResponse(
+                accessToken,
+                "Bearer",
+                jwtService.getAccessTokenExpiresInSeconds(),
+                appUser.getId(),
+                appUser.getName(),
+                appUser.getEmail(),
+                appUser.getRole());
     }
 
-    boolean passwordMatches = passwordEncoder.matches(
-            request.password(),
-            appUser.getPasswordHash()
-    );
+    @Transactional(readOnly = true)
+    public CurrentUserResponse getCurrentUser(Long userId) {
+        AppUser appUser = appUserRepository
+                .findById(userId)
+                .orElseThrow(() -> new InvalidCredentialsException("User account is unavailable"));
+        if (!appUser.isActive()) {
+            throw new InvalidCredentialsException("User account is  unavailable");
+        }
 
-    if (!passwordMatches) {
-        throw new InvalidCredentialsException(
-                "Invalid email or password"
-        );
+        return new CurrentUserResponse(
+                appUser.getId(),
+                appUser.getName(),
+                appUser.getEmail(),
+                appUser.getRole());
+
     }
 
-    String accessToken =
-            jwtService.generateAccessToken(appUser);
-
-    return new LoginResponse(
-            accessToken,
-            "Bearer",
-            jwtService.getAccessTokenExpiresInSeconds(),
-            appUser.getId(),
-            appUser.getName(),
-            appUser.getEmail(),
-            appUser.getRole()
-    );
 }
-
-}
-//理解从下到下的逻辑 重点！！！
+// 理解从下到下的逻辑 重点！！！

@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.shenq.courtbooking.user.dto.CurrentUserResponse;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,6 +39,17 @@ public class AuthController {
     public ResponseEntity<LoginResponse>login(
         @Valid @RequestBody LoginRequest request){
             LoginResponse response = authService.login(request);
+            
+            return ResponseEntity.ok(response);
+        }
+    
+    @GetMapping("/me")
+    public ResponseEntity<CurrentUserResponse>me(
+        @AuthenticationPrincipal Jwt jwt)
+        {
+            Long userId = Long.valueOf(jwt.getSubject());
+
+            CurrentUserResponse response = authService.getCurrentUser(userId);
             
             return ResponseEntity.ok(response);
         }
