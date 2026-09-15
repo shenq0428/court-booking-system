@@ -5,26 +5,40 @@ import com.shenq.courtbooking.user.dto.RegisterResponse;
 import com.shenq.courtbooking.user.service.AuthService;
 import com.shenq.courtbooking.user.dto.LoginRequest;
 import com.shenq.courtbooking.user.dto.LoginResponse;
-import jakarta.validation.Valid;
+import com.shenq.courtbooking.user.service.LoginResult;
+import com.shenq.courtbooking.user.dto.CurrentUserResponse;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.shenq.courtbooking.user.dto.CurrentUserResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+
+
+import java.time.Duration;
+import jakarta.validation.Valid;
 
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final boolean secureCookie;
 
-    public AuthController(AuthService authService) {
+    public AuthController(
+        AuthService authService,
+        @Value("${app.security.cookie.secure}")
+        boolean secureCookie
+    ) {
         this.authService = authService;
+        this.secureCookie = secureCookie;
     }
 
     @PostMapping("/register")
@@ -37,10 +51,15 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<LoginResponse>login(
-        @Valid @RequestBody LoginRequest request){
-            LoginResponse response = authService.login(request);
+        @Valid @RequestBody LoginRequest request
+    ){
+            LoginResult result = authService.login(request);
             
-            return ResponseEntity.ok(response);
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token",result.refreshToken())
+            .httpOnly(true).secure(secureCookie).sameSite("Strict").path("/api/auth")
+            .maxAge(Duration.ofSeconds(result.refreshTokenExpiresInSeconds())).build();
+
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,refreshTokenCookie.toString()).body(result.response());
         }
     
     @GetMapping("/me")
