@@ -50,9 +50,7 @@ public class RefreshTokenService {
 
         private String generateRawToken() {
                 byte[] randomBytes = new byte[TOKEN_BYTE_LENGTH];
-
                 secureRandom.nextBytes(randomBytes);
-
                 return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
         }
 
@@ -71,10 +69,11 @@ public class RefreshTokenService {
                 return refreshTokenTtl.toSeconds();
         }
 
+        // used by /refresh
         @Transactional
         public RefreshTokenRotation rotate(String rawToken) {
                 if (rawToken == null || rawToken.isBlank()) {
-                        throw new InvalidCredentialsException( "Invalid refresh token");
+                        throw new InvalidCredentialsException("Invalid refresh token");
                 }
 
                 String tokenHash = hashToken(rawToken);
@@ -84,13 +83,14 @@ public class RefreshTokenService {
 
                 Instant now = Instant.now();
 
-                if (currentToken.isRevoked() ||
-                                currentToken.isExpired(now) ||
-                                !currentToken.getUser().isActive()) {
+                if (currentToken.isRevoked() || currentToken.isExpired(now) || !currentToken.getUser().isActive()) {
                         throw new InvalidCredentialsException("Invalid refresh token");
                 }
 
+                // used refreshtoken.java
+                // public void revoke(Instant revokedAt) {this.revokedAt = revokedAt;}
                 currentToken.revoke(now);
+
                 refreshTokenRepository.save(currentToken);
 
                 String newRawToken = generateRawToken();
@@ -108,6 +108,24 @@ public class RefreshTokenService {
                                 currentToken.getUser(),
                                 newRawToken,
                                 refreshTokenTtl.toSeconds());
+        }
+
+        // revoke logic used by logout
+        @Transactional
+        public void revoke(String rawToken) {
+                if (rawToken == null || rawToken.isBlank()) {
+                        return;
+                }
+
+                String tokenHash = hashToken(rawToken);
+
+                refreshTokenRepository.findByTokenHash(tokenHash)
+                                .ifPresent(refreshToken -> {
+                                        if (!refreshToken.isRevoked()) {
+                                                refreshToken.revoke(Instant.now());
+                                                refreshTokenRepository.save(refreshToken);
+                                        }
+                                });
         }
 
 }

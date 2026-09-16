@@ -21,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import org.springframework.web.bind.annotation.CookieValue;
 
 import java.time.Duration;
 import jakarta.validation.Valid;
@@ -73,4 +74,36 @@ public class AuthController {
             return ResponseEntity.ok(response);
         }
     
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse>refresh(
+        @CookieValue(
+            name="refresh_token",
+            required=false
+        )String rawRefreshToken
+    ){
+        LoginResult result = authService.refresh(rawRefreshToken);
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token",result.refreshToken())
+        .httpOnly(true).secure(secureCookie).sameSite("Strict").path("/api/auth")
+        .maxAge(Duration.ofSeconds(result.refreshTokenExpiresInSeconds())).build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,refreshTokenCookie.toString()).body(result.response());
+     }
+
+     @PostMapping("/logout")
+     public ResponseEntity<Void>logout(
+        @CookieValue(
+            name="refresh_token",
+            required=false
+        )
+        String rawRefreshToken
+     ){
+        authService.logout(rawRefreshToken);
+
+        ResponseCookie deletedCookie=ResponseCookie.from("refresh_token","").httpOnly(true).secure(secureCookie).sameSite("Strict")
+        .path("/api/auth").maxAge(Duration.ZERO).build();
+
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE,deletedCookie.toString()).build();
+     }
+
 }

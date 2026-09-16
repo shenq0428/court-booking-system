@@ -12,6 +12,7 @@ import com.shenq.courtbooking.user.dto.LoginRequest;
 import com.shenq.courtbooking.user.dto.LoginResponse;
 import com.shenq.courtbooking.user.dto.CurrentUserResponse;
 import com.shenq.courtbooking.security.RefreshTokenService;
+import com.shenq.courtbooking.security.RefreshTokenRotation;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class AuthService {
 
                 // 检查重复email
                 if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-                        throw new EmailAlreadyRegisteredException( "Email is already registerd T_T");
+                        throw new EmailAlreadyRegisteredException("Email is already registerd T_T");
                 }
 
                 String passwordHash = passwordEncoder.encode(request.password());
@@ -57,8 +58,7 @@ public class AuthService {
                                 savedUser.getId(),
                                 savedUser.getName(),
                                 savedUser.getEmail(),
-                                savedUser.getRole()
-                        );
+                                savedUser.getRole());
         }
 
         @Transactional
@@ -94,14 +94,12 @@ public class AuthService {
                                 appUser.getId(),
                                 appUser.getName(),
                                 appUser.getEmail(),
-                                appUser.getRole()
-                        );
+                                appUser.getRole());
 
                 return new LoginResult(
                                 response,
                                 refreshToken,
-                                refreshTokenService.getRefreshTokenExpiresInSeconds()
-                        );
+                                refreshTokenService.getRefreshTokenExpiresInSeconds());
         }
 
         @Transactional(readOnly = true)
@@ -119,6 +117,34 @@ public class AuthService {
                                 appUser.getEmail(),
                                 appUser.getRole());
 
+        }
+
+        @Transactional
+        public LoginResult refresh(String rawRefreshToken) {
+                RefreshTokenRotation rotation = refreshTokenService.rotate(rawRefreshToken);
+
+                AppUser appUser = rotation.user();
+
+                String accessToken = jwtService.generateAccessToken(appUser);
+
+                LoginResponse response = new LoginResponse(
+                                accessToken,
+                                "Bearer",
+                                jwtService.getAccessTokenExpiresInSeconds(),
+                                appUser.getId(),
+                                appUser.getName(),
+                                appUser.getEmail(),
+                                appUser.getRole());
+
+                return new LoginResult(
+                                response,
+                                rotation.refreshToken(),
+                                rotation.refreshTokenExpiresInSeconds());
+        }
+
+        @Transactional
+        public void logout(String rawRefreshToken){
+                refreshTokenService.revoke(rawRefreshToken);
         }
 
 }
