@@ -2,6 +2,89 @@
   min-height: 100vh;
 }
 
+.logout-button,
+.logout-cancel-button,
+.logout-confirm-button {
+  padding: 10px 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logout-button,
+.logout-cancel-button {
+  color: #334155;
+  background: white;
+}
+
+.logout-button:hover,
+.logout-cancel-button:hover {
+  color: #10804b;
+  background: #f0fdf4;
+  border-color: #15975a;
+}
+
+.logout-dialog {
+  width: min(400px, calc(100vw - 40px));
+  box-sizing: border-box;
+  padding: 28px;
+  color: #10243e;
+  background: white;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgb(15 23 42 / 25%);
+}
+
+.logout-dialog::backdrop {
+  background: rgb(15 23 42 / 50%);
+}
+
+.logout-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+}
+
+.logout-dialog p {
+  margin: 0 0 24px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.logout-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.logout-confirm-button {
+  color: white;
+  background: #15975a;
+  border-color: #15975a;
+}
+
+.logout-confirm-button:hover {
+  background: #10804b;
+  border-color: #10804b;
+}
+
+.logout-button:focus-visible,
+.logout-dialog button:focus-visible {
+  outline: 3px solid #15975a;
+  outline-offset: 3px;
+}
+
+.logout-dialog button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.logout-dialog .logout-error {
+  color: #b91c1c;
+}
+
 .site-header {
   width: 100%;
   background-color: white;
@@ -844,6 +927,14 @@
 }
 
 .header-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.header-user-actions {
   display: flex;
   align-items: center;
   gap: 12px;

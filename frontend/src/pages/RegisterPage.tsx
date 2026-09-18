@@ -1,12 +1,6 @@
-import {
-    useState,
-    type SubmitEvent,
-} from 'react'
-import {
-    Eye,
-    EyeOff,
-} from 'lucide-react'
-import { Link } from 'react-router'
+import {useState,type SubmitEvent,} from 'react'
+import {Eye, EyeOff,} from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
 import { FaFacebook } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
 
@@ -19,14 +13,14 @@ function RegisterPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-
     const [showPassword, setShowPassword] = useState(false)
-
     const [error, setError] = useState<string | null>(null)
-
     const [message, setMessage] = useState<string | null>(null)
+    const navigate = useNavigate()
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    function handleRegisterSubmit(
+
+    async function handleRegisterSubmit(
         event: SubmitEvent<HTMLFormElement>,
     ) {
         event.preventDefault()
@@ -38,7 +32,35 @@ function RegisterPage() {
         }
 
         setError(null)
-        setMessage('The registration API is not connected yet.',)
+        setMessage(null)
+        setIsSubmitting(true)
+
+        try{
+            const response = await fetch('http://localhost:8080/api/auth/register',
+                {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json',},
+                    body:JSON.stringify({name,email,password,}),
+                },
+            )
+
+            if(!response.ok){
+                if (response.status === 409) {
+                setError('An account with this email already exists.',)
+            } else if (response.status === 400) {
+                setError('Please check your registration details.',)
+            } else {
+                setError('Registration failed. Please try again.',)
+            }
+            return
+            }
+
+            navigate('/login',{replace:true,})
+        }catch{
+            setError('Cannot connect the server.',)
+        }finally{
+            setIsSubmitting(false)
+        }
     }
 
     function handleSocialRegistration(
@@ -161,16 +183,10 @@ function RegisterPage() {
                         <span>Confirm password</span>
 
                         <input
-                            type={
-                                showPassword
-                                    ? 'text'
-                                    : 'password'
-                            }
+                            type={showPassword? 'text': 'password'}
                             value={confirmPassword}
                             onChange={(event) =>
-                                setConfirmPassword(
-                                    event.target.value,
-                                )
+                                setConfirmPassword(event.target.value,)
                             }
                             placeholder="Enter your password again"
                             autoComplete="new-password"
@@ -182,8 +198,9 @@ function RegisterPage() {
                     <button
                         className="auth-submit-button"
                         type="submit"
+                        disabled={isSubmitting}
                     >
-                        Create Account
+                        {isSubmitting?'Creating account...':'Create Account'}
                     </button>
                 </form>
 
@@ -220,9 +237,7 @@ function RegisterPage() {
                     <button
                         className="social-auth-button"
                         type="button"
-                        onClick={() =>
-                            handleSocialRegistration('Facebook')
-                        }
+                        onClick={() => handleSocialRegistration('Facebook')}
                     >
                         <FaFacebook
                             className="facebook-brand-icon"
@@ -236,9 +251,7 @@ function RegisterPage() {
                     <button
                         className="social-auth-button"
                         type="button"
-                        onClick={() =>
-                            handleSocialRegistration('Google')
-                        }
+                        onClick={() => handleSocialRegistration('Google')}
                     >
                         <FcGoogle
                             size={21}

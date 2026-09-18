@@ -1,50 +1,68 @@
-import {
-    useState,
-    type SubmitEvent,
-} from 'react'
-import {
-    Eye,
-    EyeOff,
-} from 'lucide-react'
-import { Link } from 'react-router'
+import { useState, type SubmitEvent, } from 'react'
+import { Eye, EyeOff, } from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
 import { FaFacebook } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
+import { useAuth } from '../auth/AuthContext'
+import type { LoginResponse } from '../types/auth'
 
 type SocialProvider =
     | 'Facebook'
     | 'Google'
 
 function LoginPage() {
+    const {startSession} = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] =
-        useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [message, setMessage] = useState<string | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const navigate = useNavigate()
 
-    const [message, setMessage] =
-        useState<string | null>(null)
-
-    function handleLoginSubmit(
+    async function handleLoginSubmit(
         event: SubmitEvent<HTMLFormElement>,
     ) {
         event.preventDefault()
 
-        setMessage(
-            'The login API is not connected yet.',
-        )
+        setMessage(null)
+        setIsSubmitting(true)
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/login',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password, }),
+                },)
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    setMessage('Invalid email or password.',)
+                } else {
+                    setMessage('Login failed.Please try again.',)
+                }
+                return
+            }
+
+            const loginData = await response.json() as LoginResponse
+            startSession(loginData)
+            setMessage(`Welcome back,${loginData.name}!`,)
+            navigate('/', {replace: true,})
+        } catch {
+            setMessage('Cannot connect the server',)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     function handleSocialLogin(
         provider: SocialProvider,
     ) {
-        setMessage(
-            `${provider} login is not connected yet.`,
-        )
+        setMessage(`${provider} login is not connected yet.`,)
     }
 
     function handleForgotPassword() {
-        setMessage(
-            'The forgot password page is coming next.',
-        )
+        setMessage('The forgot password page is coming next.',)
     }
 
     return (
@@ -152,8 +170,9 @@ function LoginPage() {
                     <button
                         className="auth-submit-button"
                         type="submit"
+                        disabled={isSubmitting}
                     >
-                        Log In
+                        {isSubmitting ? 'Logging in...':'Log In'}
                     </button>
                 </form>
 
