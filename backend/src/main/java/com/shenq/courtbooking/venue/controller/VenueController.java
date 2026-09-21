@@ -3,7 +3,7 @@ package com.shenq.courtbooking.venue.controller;
 import com.shenq.courtbooking.venue.dto.VenueCreateRequest;
 import com.shenq.courtbooking.venue.dto.VenueResponse;
 import com.shenq.courtbooking.venue.service.VenueService;
-
+import com.shenq.courtbooking.venue.dto.VenueSummaryResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -35,8 +37,11 @@ public class VenueController {
     }
 
     @GetMapping
-    public List<VenueResponse> getAllVenues() {
-        return venueService.getAllVenues();
+    public Page<VenueSummaryResponse> getVenues(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+        ) {
+        return venueService.getVenueSummaries(page, size);
     }
 
     @GetMapping("/{id}")

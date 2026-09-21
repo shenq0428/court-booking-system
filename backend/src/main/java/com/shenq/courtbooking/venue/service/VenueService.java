@@ -2,22 +2,36 @@ package com.shenq.courtbooking.venue.service;
 
 import com.shenq.courtbooking.venue.dto.VenueCreateRequest;
 import com.shenq.courtbooking.venue.dto.VenueResponse;
+import com.shenq.courtbooking.venue.dto.VenueSummaryResponse;
 import com.shenq.courtbooking.venue.entity.Venue;
 import com.shenq.courtbooking.venue.repository.VenueRepository;
 
+import com.shenq.courtbooking.court.entity.Court;
+import com.shenq.courtbooking.court.entity.SportType;
+import com.shenq.courtbooking.court.repository.CourtRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-@Service
+@Service  
 public class VenueService {
 
     private final VenueRepository venueRepository;
+    private final CourtRepository courtRepository;
 
-    public VenueService(VenueRepository venueRepository) {
+    public VenueService(VenueRepository venueRepository, CourtRepository courtRepository) {
         this.venueRepository = venueRepository;
+        this.courtRepository = courtRepository;
     }
 
     @Transactional
@@ -77,5 +91,85 @@ public class VenueService {
         Venue venue = venueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Venue not found with id: " + id));
         return convertToResponse(venue);
+    }
+
+    // 查询
+    @Transactional(readOnly = true)
+    public Page<VenueSummaryResponse> getVenueSummaries(int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("name").ascending());
+        Page<Venue> venuePage = venueRepository.findAllByActiveTrue(pageable);
+
+        List<Long> venueIds = new ArrayList<>();
+
+        for (Venue venue : venuePage.getContent()) {
+            venueIds.add(venue.getId());
+        }
+
+        List<Court> courts;
+        if (venueIds.isEmpty()) {
+            courts = List.of();
+        } else {
+            courts = courtRepository.findAllByVenue_IdInAndActiveTrue(venueIds);
+        }
+
+        Map<Long, List<Court>> courtsByVenueId = new HashMap<>();
+        for (Court court : courts) {
+            Long venueId = court.getVenue().getId();
+
+            if (!courtsByVenueId.containsKey(venueId)) {
+                courtsByVenueId.put(venueId, new ArrayList<>());
+            }
+            courtsByVenueId.get(venueId).add(court);
+        }
+
+        return venuePage.map(venue -> {
+            List<Court> venueCourts = courtsByVenueId.getOrDefault(venue.getId(), List.of());
+
+            return convertToSummaryResponse(venue, venueCourts);
+        });
+    }
+
+    // 转换方法
+    private VenueSummaryResponse convertToSummaryResponse(Venue venue, List<Court> courts) {
+        List<SportType> sports = new ArrayList<>();
+        BigDecimal startingPrice = null;
+
+        for (Court court : courts) {
+            if (!sports.contains(court.getSport())) {
+                sports.add(court.getSport());
+            }
+
+            if (startingPrice == null || court.getPricePerHour().compareTo(startingPrice) < 0) {
+                startingPrice = court.getPricePerHour();
+            }
+        }
+
+        return new VenueSummaryResponse(
+                venue.getId(),
+                venue.getName(),
+                buildAddress(venue),
+                sports,
+                startingPrice,
+                null);
+    }
+
+    // 加入地址组合方法
+    private String buildAddress(Venue venue) {
+        List<String> addressParts = new ArrayList<>();
+        addAddressPart(addressParts, venue.getAddressLine1());
+        addAddressPart(addressParts, venue.getAddressLine2());
+        addAddressPart(addressParts, venue.getCity());
+        addAddressPart(addressParts, venue.getState());
+
+        return String.join(", ", addressParts);
+    }
+
+    private void addAddressPart(List<String> addressParts, String value) {
+        if (value != null && !value.isBlank()) {
+            addressParts.add(value);
+        }
     }
 }
