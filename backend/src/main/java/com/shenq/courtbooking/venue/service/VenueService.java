@@ -49,6 +49,8 @@ public class VenueService {
                 request.getLongitude(),
                 request.getPhoneNumber());
 
+        venue.setImageUrl(request.getImageUrl());
+
         Venue savedVenue = venueRepository.save(venue);
 
         return convertToResponse(savedVenue);
@@ -153,7 +155,8 @@ public class VenueService {
                 buildAddress(venue),
                 sports,
                 startingPrice,
-                null);
+                venue.getImageUrl()
+            );
     }
 
     // 加入地址组合方法

@@ -46,6 +46,8 @@ public class VenueCreateRequest {
     @Size(max = 30, message = "Phone number must not exceed 30 characters")
     private String phoneNumber;
 
+    private String imageUrl;
+
     public VenueCreateRequest() {
     }
 
@@ -127,5 +129,13 @@ public class VenueCreateRequest {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

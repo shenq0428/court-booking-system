@@ -50,6 +50,9 @@ public class Venue {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     // JPA requires a no-argument constructor.
     public Venue() {
     }
@@ -64,8 +67,7 @@ public class Venue {
             String postalCode,
             BigDecimal latitude,
             BigDecimal longitude,
-            String phoneNumber
-    ) {
+            String phoneNumber) {
         this.name = name;
         this.description = description;
         this.addressLine1 = addressLine1;
@@ -169,5 +171,13 @@ public class Venue {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

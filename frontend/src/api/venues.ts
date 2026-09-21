@@ -1,17 +1,20 @@
-import type { VenuePage, } from '../types/venues'
-
-const API_BASE_URL = 'http://localhost:8080'
+import type {
+    VenuePageResponse,
+} from '../types/venues'
 
 export async function getVenueSummaries(
     page = 0,
     size = 6,
-): Promise<VenuePage> {
+): Promise<VenuePageResponse> {
     const response = await fetch(
-        `${API_BASE_URL}/api/venues?page=${page}&size=${size}`,
+        `http://localhost:8080/api/venues?page=${page}&size=${size}`,
     )
 
     if (!response.ok) {
-        throw new Error('failed to load venues.')
+        throw new Error(
+            'Failed to load venues.',
+        )
     }
-    return await response.json() as VenuePage
+
+    return (await response.json()) as VenuePageResponse
 }

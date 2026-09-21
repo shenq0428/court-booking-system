@@ -1,18 +1,32 @@
-export type SportType =
+export type Sport =
     | 'Badminton'
     | 'Pickleball'
 
-export type VenueSummary = {
+export type Venue = {
     id: number
     name: string
     address: string
-    sports: SportType[]
-    pricePerHour: number | null
+    sports: Sport[]
+    pricePerHour: number
+    isOpen: boolean
+    imageUrl: string
+}
+
+export type ApiSportType =
+    | 'BADMINTON'
+    | 'PICKLEBALL'
+
+export type VenueSummaryResponse = {
+    id: number
+    name: string
+    address: string
+    sports: ApiSportType[]
+    startingPricePerHour: number | null
     imageUrl: string | null
 }
 
-export type VenuePage = {
-    content: VenueSummary[]
+export type VenuePageResponse = {
+    content: VenueSummaryResponse[]
     empty: boolean
     first: boolean
     last: boolean

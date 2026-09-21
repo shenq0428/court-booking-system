@@ -9,6 +9,17 @@ function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
     return (
         <article className="venue-card">
             <div className="venue-cover">
+                <img
+                    className="venue-cover-image"
+                    src={venue.imageUrl}
+                    alt={`${venue.name} indoor courts`}
+                />
+
+                <div
+                    className="venue-cover-overlay"
+                    aria-hidden="true"
+                />
+
                 <span className="venue-cover-text">
                     Indoor courts
                 </span>
@@ -23,7 +34,7 @@ function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
 
             <div className="venue-card-content">
                 <h3>{venue.name}</h3>
-                <p className="venue-adddress">
+                <p className="venue-address">
                     {venue.address}
                 </p>
 
