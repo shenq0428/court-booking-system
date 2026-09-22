@@ -4,6 +4,8 @@ import com.shenq.courtbooking.venue.dto.VenueCreateRequest;
 import com.shenq.courtbooking.venue.dto.VenueResponse;
 import com.shenq.courtbooking.venue.service.VenueService;
 import com.shenq.courtbooking.venue.dto.VenueSummaryResponse;
+import com.shenq.courtbooking.court.entity.SportType;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @RestController
@@ -40,8 +44,7 @@ public class VenueController {
     @GetMapping
     public Page<VenueSummaryResponse> getVenues(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size
-        ) {
+            @RequestParam(defaultValue = "6") int size) {
         return venueService.getVenueSummaries(page, size);
     }
 
@@ -52,13 +55,29 @@ public class VenueController {
 
     @GetMapping("/{venueId}/nearby")
     public List<VenueSummaryResponse> getNearbyVenues(
-        @PathVariable Long venueId,
-        @RequestParam(defaultValue ="3")
-        int limit
-    ){
+            @PathVariable Long venueId,
+            @RequestParam(defaultValue = "3") int limit) {
         return venueService.getNearbyVenues(
-            venueId,
-            limit
-        );
+                venueId,
+                limit);
     }
+
+    @GetMapping("/search")
+    public Page<VenueSummaryResponse> searchVenues(
+            @RequestParam(required = false) 
+            String location,
+            @RequestParam(required = false) 
+            SportType sport,
+            @RequestParam(defaultValue = "0") 
+            int page,
+            @RequestParam(defaultValue = "9") 
+            int size
+        ) {
+        return venueService.searchVenues(
+                location,
+                sport,
+                page,
+                size);
+    }
+
 }

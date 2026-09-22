@@ -6,6 +6,7 @@ import { Route, Routes } from 'react-router'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VenueDetailsPage from './pages/VenueDetailsPage'
+import FindCourtPage from './pages/FindCourtPage'
 
 function App() {
   return (
@@ -22,13 +23,18 @@ function App() {
         <Route path="/login"
           element={<LoginPage />}
         />
-        
+
         <Route path="/register"
-        element={<RegisterPage/>}
+          element={<RegisterPage />}
         />
 
         <Route path="/venues/:venueId"
-        element={<VenueDetailsPage/>}
+          element={<VenueDetailsPage />}
+        />
+
+        <Route
+          path="/find-court"
+          element={<FindCourtPage />}
         />
       </Routes>
     </div>

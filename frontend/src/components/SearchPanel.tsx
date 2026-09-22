@@ -1,5 +1,8 @@
-import { useState, type SubmitEvent } from 'react'
+import { useState, } from 'react'
 import type { Sport } from '../types/venues'
+import { useNavigate,}from 'react-router'
+import type{SubmitEvent,}from 'react'
+
 
 const sports: Sport[] = [
   'Badminton',
@@ -8,16 +11,45 @@ const sports: Sport[] = [
 
 
 function SearchPanel() {
-    //useState
+    
     const [location, setLocation] = useState('Sungai Buloh')
     const [sport, setSport] = useState<Sport>('Badminton')
     const [date, setDate] = useState('2026-09-06')
-    const [hasSearched, setHasSearched] = useState(false)
+    const navigate = useNavigate()
 
-    function handleSearch(event: SubmitEvent<HTMLFormElement>) {
-        event.preventDefault()
-        setHasSearched(true)
+    function handleSearch(
+    event: SubmitEvent<HTMLFormElement>,
+) {
+    event.preventDefault()
+
+    const params = new URLSearchParams()
+
+    if (location.trim()) {
+        params.set( 'location', location.trim(), )
     }
+
+    if (sport === 'Badminton') {
+        params.set( 'sport', 'BADMINTON',)
+    }
+
+    if (sport === 'Pickleball') {
+        params.set( 'sport','PICKLEBALL',)
+    }
+
+    if (date) {
+        params.set(
+            'date',
+            date,
+        )
+    }
+
+    params.set('page', '0')
+    params.set('size', '9')
+
+    navigate(
+        `/find-court?${params.toString()}`,
+    )
+}
 
     return (<section id="find-court" className="search-section">
         <div className="search-content">
@@ -86,16 +118,7 @@ function SearchPanel() {
                 </button>
             </form>
 
-            {hasSearched && (
-                <div className="search-result">
-                    <strong>
-                        Searching for {sport} courts
-                    </strong>
-                    <span>
-                        {location} - {date}
-                    </span>
-                </div>
-            )}
+
         </div>
     </section>
     )

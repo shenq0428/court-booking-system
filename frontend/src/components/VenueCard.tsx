@@ -1,4 +1,5 @@
 import type { Venue } from '../types/venues'
+import { Link } from 'react-router'
 
 type VenueCardProps = {
     venue: Venue
@@ -8,7 +9,11 @@ type VenueCardProps = {
 function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
     return (
         <article className="venue-card">
-            <div className="venue-cover">
+            <Link
+                className="venue-cover venue-cover-link"
+                to={`/venues/${venue.id}`}
+                aria-label={`View ${venue.name}`}
+            >
                 <img
                     className="venue-cover-image"
                     src={venue.imageUrl}
@@ -24,16 +29,22 @@ function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
                     Indoor courts
                 </span>
 
-                <span className={venue.isOpen
-                    ? 'venue-status open'
-                    : 'venue-status closed'
-                }>
-                    {venue.isOpen ? 'Open now' : 'Closed'}
+                <span
+                    className={
+                        venue.isOpen
+                            ? 'venue-status open'
+                            : 'venue-status closed'
+                    }
+                >
+                    {venue.isOpen
+                        ? 'Available'
+                        : 'Unavailable'}
                 </span>
-            </div>
+            </Link>
 
             <div className="venue-card-content">
                 <h3>{venue.name}</h3>
+
                 <p className="venue-address">
                     {venue.address}
                 </p>
@@ -45,16 +56,44 @@ function VenueCard({ venue,onViewTimes, }: VenueCardProps) {
                         </span>
                     ))}
                 </div>
+
                 <div className="venue-card-footer">
-                    <p>From{' '} <strong> RM {venue.pricePerHour}/hour</strong></p>
-                    <button type="button"
-                        disabled={!venue.isOpen}
-                            onClick={()=> onViewTimes(venue)}>
-                        View Times
-                    </button>
+                    <p>
+                        {venue.pricePerHour > 0 ? (
+                            <>
+                                From{' '}
+                                <strong>
+                                    RM {venue.pricePerHour}/hour
+                                </strong>
+                            </>
+                        ) : (
+                            <span>Pricing unavailable</span>
+                        )}
+                    </p>
+
+                    <div className="venue-card-actions">
+                        <Link
+                            className="venue-view-button"
+                            to={`/venues/${venue.id}`}
+                        >
+                            View
+                        </Link>
+
+                        <button
+                            className="venue-book-button"
+                            type="button"
+                            disabled={!venue.isOpen}
+                            onClick={() =>
+                                onViewTimes(venue)
+                            }
+                        >
+                            Book Now
+                        </button>
+                    </div>
                 </div>
             </div>
         </article>
     )
 }
+
 export default VenueCard

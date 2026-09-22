@@ -1,7 +1,7 @@
-import {useEffect, useState,} from 'react'
-import {useNavigate,} from 'react-router'
+import { useEffect, useState, } from 'react'
+import { useNavigate, Link, } from 'react-router'
 import VenueCard from './VenueCard'
-import type {ApiSportType,Sport,Venue, VenuePageResponse,VenueSummaryResponse,} from '../types/venues'
+import type { ApiSportType, Sport, Venue, VenuePageResponse, VenueSummaryResponse, } from '../types/venues'
 import sungaiBulohCourtImage from '../assets/venues/sungai-buloh-court.png'
 
 function convertSport(
@@ -41,7 +41,7 @@ function convertApiVenue(
 }
 
 function VenueSection() {
-    const [venues, setVenues] =useState<Venue[]>([])
+    const [venues, setVenues] = useState<Venue[]>([])
 
     const [totalVenues, setTotalVenues] = useState(0)
 
@@ -61,16 +61,16 @@ function VenueSection() {
                 )
 
                 if (!response.ok) {
-                    throw new Error('Failed to load venues.', )
+                    throw new Error('Failed to load venues.',)
                 }
 
-                const venuePage =(await response.json()) as VenuePageResponse
+                const venuePage = (await response.json()) as VenuePageResponse
 
-                const convertedVenues = venuePage.content.map( convertApiVenue,)
+                const convertedVenues = venuePage.content.map(convertApiVenue,)
 
                 setVenues(convertedVenues)
 
-                setTotalVenues( venuePage.totalElements,)
+                setTotalVenues(venuePage.totalElements,)
             } catch {
                 setError(
                     'Cannot load venues. Please try again.',
@@ -99,9 +99,12 @@ function VenueSection() {
                     </p>
                 </div>
 
-                <button type="button">
+                <Link
+                    className="view-all-locations-link"
+                    to="/find-court"
+                >
                     View all locations →
-                </button>
+                </Link>
             </div>
 
             {isLoading && (

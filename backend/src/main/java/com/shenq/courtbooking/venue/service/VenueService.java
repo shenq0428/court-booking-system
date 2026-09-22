@@ -182,7 +182,7 @@ public class VenueService {
                 page,
                 size,
                 Sort.by("name").ascending());
-        Page<Venue> venuePage = venueRepository.findAllByActiveTrue(pageable);
+        Page<Venue> venuePage = venueRepository.findAllBookable(pageable);
 
         List<Long> venueIds = new ArrayList<>();
 
@@ -213,6 +213,90 @@ public class VenueService {
             return convertToSummaryResponse(venue, venueCourts);
         });
     }
+
+    @Transactional(readOnly = true)
+public Page<VenueSummaryResponse> searchVenues(
+        String location,
+        SportType sport,
+        int page,
+        int size
+) {
+    String normalizedLocation =
+            location == null || location.isBlank()
+                    ?  ""
+                    : location.trim();
+
+    int safePage = Math.max(page, 0);
+    int safeSize = Math.max(
+            1,
+            Math.min(size, 30)
+    );
+
+    Pageable pageable = PageRequest.of(
+            safePage,
+            safeSize,
+            Sort.by("name").ascending()
+    );
+
+    Page<Venue> venuePage =
+            venueRepository.searchActiveVenues(
+                    normalizedLocation,
+                    sport,
+                    pageable
+            );
+
+    List<Long> venueIds = new ArrayList<>();
+
+    for (Venue venue : venuePage.getContent()) {
+        venueIds.add(venue.getId());
+    }
+
+    List<Court> courts;
+
+    if (venueIds.isEmpty()) {
+        courts = List.of();
+    } else {
+        courts =
+                courtRepository
+                        .findAllByVenue_IdInAndActiveTrue(
+                                venueIds
+                        );
+    }
+
+    Map<Long, List<Court>> courtsByVenueId =
+            new HashMap<>();
+
+    for (Court court : courts) {
+        Long courtVenueId =
+                court.getVenue().getId();
+
+        if (!courtsByVenueId.containsKey(
+                courtVenueId
+        )) {
+            courtsByVenueId.put(
+                    courtVenueId,
+                    new ArrayList<>()
+            );
+        }
+
+        courtsByVenueId
+                .get(courtVenueId)
+                .add(court);
+    }
+
+    return venuePage.map(venue -> {
+        List<Court> venueCourts =
+                courtsByVenueId.getOrDefault(
+                        venue.getId(),
+                        List.of()
+                );
+
+        return convertToSummaryResponse(
+                venue,
+                venueCourts
+        );
+    });
+}
 
     // 转换方法
     private VenueSummaryResponse convertToSummaryResponse(Venue venue, List<Court> courts) {

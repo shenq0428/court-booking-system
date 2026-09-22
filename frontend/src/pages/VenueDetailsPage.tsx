@@ -1,7 +1,8 @@
 import { useEffect, useState,} from 'react'
 import {Link, useParams,} from 'react-router'
-import type {CourtResponse,VenueDetailsResponse,} from '../types/venues'
+import type {CourtResponse,VenueDetailsResponse, VenueSummaryResponse,} from '../types/venues'
 import fallbackVenueImage from '../assets/venues/sungai-buloh-court.png'
+
 
 function VenueDetailsPage() {
     const { venueId } = useParams()
@@ -9,8 +10,12 @@ function VenueDetailsPage() {
     const [courts, setCourts] = useState<CourtResponse[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [nearbyVenues, setNearbyVenues] = useState<VenueSummaryResponse[]>([])
+
 
     useEffect(() => {
+        // GET /api/venues/{id}
+    // GET /api/venues/{id}/courts
         async function loadVenueDetails() {
             if (!venueId) {
                 setError('Invalid venue ID.')
@@ -53,9 +58,40 @@ function VenueDetailsPage() {
                 setIsLoading(false)
             }
         }
-
+        
         void loadVenueDetails()
     }, [venueId])
+
+    useEffect(() => {
+        // GET /api/venues/{id}/nearby
+    if (!venueId) {
+        return
+    }
+
+    async function loadNearbyVenues() {
+        setNearbyVenues([])
+
+        try {
+            const response = await fetch(
+                `http://localhost:8080/api/venues/${venueId}/nearby?limit=3`,
+            )
+
+            if (!response.ok) {
+                return
+            }
+
+            const nearbyData = await response.json() as VenueSummaryResponse[]
+
+            setNearbyVenues(nearbyData)
+        } catch {
+            // Nearby venues are optional.
+            // The main Venue page can still work.
+        }
+    }
+
+    void loadNearbyVenues()
+}, [venueId])
+
 
     if (isLoading) {
         return (
@@ -195,6 +231,69 @@ function VenueDetailsPage() {
                     )}
                 </section>
             </div>
+
+            {nearbyVenues.length > 0 && (
+    <section className="nearby-venues-section">
+        <div className="nearby-venues-heading">
+            <div>
+                <p>Explore more</p>
+                <h2>Venues Nearby</h2>
+            </div>
+
+            <Link to="/">
+                View all venues →
+            </Link>
+        </div>
+
+        <div className="nearby-venues-grid">
+            {nearbyVenues.map((nearbyVenue) => (
+                <Link
+                    className="nearby-venue-card"
+                    key={nearbyVenue.id}
+                    to={`/venues/${nearbyVenue.id}`}
+                >
+                    <img
+                        src={
+                            nearbyVenue.imageUrl
+                            ?? fallbackVenueImage
+                        }
+                        alt={nearbyVenue.name}
+                    />
+
+                    <div className="nearby-venue-content">
+                        <div className="nearby-venue-sports">
+                            {nearbyVenue.sports.map(
+                                (sport) => (
+                                    <span key={sport}>
+                                        {sport === 'BADMINTON'
+                                            ? 'Badminton'
+                                            : 'Pickleball'}
+                                    </span>
+                                ),
+                            )}
+                        </div>
+
+                        <h3>{nearbyVenue.name}</h3>
+
+                        <p>{nearbyVenue.address}</p>
+
+                        <div className="nearby-venue-footer">
+                            <strong>
+                                {nearbyVenue
+                                    .startingPricePerHour
+                                    !== null
+                                    ? `From RM ${nearbyVenue.startingPricePerHour}/hour`
+                                    : 'Pricing unavailable'}
+                            </strong>
+
+                            <span>See venue →</span>
+                        </div>
+                    </div>
+                </Link>
+            ))}
+        </div>
+    </section>
+)}
         </main>
     )
 }

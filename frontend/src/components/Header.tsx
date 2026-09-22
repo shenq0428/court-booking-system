@@ -54,7 +54,7 @@ function Header() {
                     className="main-nav"
                     aria-label="Main navigation"
                 >
-                    <NavLink to="/#find-court"
+                    <NavLink to="/find-court"
                         className={({ isActive }) => isActive ? 'active' : undefined}
                     >
                         Find a Court
