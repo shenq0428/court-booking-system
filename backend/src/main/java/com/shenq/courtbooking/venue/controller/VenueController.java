@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -47,5 +48,17 @@ public class VenueController {
     @GetMapping("/{id}")
     public VenueResponse getVenueById(@PathVariable Long id) {
         return venueService.getVenueById(id);
+    }
+
+    @GetMapping("/{venueId}/nearby")
+    public List<VenueSummaryResponse> getNearbyVenues(
+        @PathVariable Long venueId,
+        @RequestParam(defaultValue ="3")
+        int limit
+    ){
+        return venueService.getNearbyVenues(
+            venueId,
+            limit
+        );
     }
 }

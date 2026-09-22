@@ -36,3 +36,28 @@ export type VenuePageResponse = {
     totalElements: number
     totalPages: number
 }
+
+export type VenueDetailsResponse = {
+    id: number
+    name: string
+    description: string | null
+    addressLine1: string
+    addressLine2: string | null
+    city: string
+    state: string
+    postalCode: string
+    latitude: number | null
+    longitude: number | null
+    phoneNumber: string | null
+    imageUrl: string | null
+    active: boolean
+}
+
+export type CourtResponse = {
+    id: number
+    venueId: number
+    courtNumber: number
+    sport: ApiSportType
+    pricePerHour: number
+    active: boolean
+}

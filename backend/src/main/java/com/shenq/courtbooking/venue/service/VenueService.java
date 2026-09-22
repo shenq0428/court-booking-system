@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service  
+@Service
 public class VenueService {
 
     private final VenueRepository venueRepository;
@@ -84,6 +84,7 @@ public class VenueService {
                 venue.getLatitude(),
                 venue.getLongitude(),
                 venue.getPhoneNumber(),
+                venue.getImageUrl(),
                 venue.isActive());
     }
 
@@ -93,6 +94,85 @@ public class VenueService {
         Venue venue = venueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Venue not found with id: " + id));
         return convertToResponse(venue);
+    }
+
+    // nearby location method
+    @Transactional(readOnly = true)
+    public List<VenueSummaryResponse> getNearbyVenues(
+            Long venueId,
+            int limit) {
+        Venue sourceVenue = venueRepository
+                .findById(venueId)
+                .orElseThrow(() -> new RuntimeException("Venue not found with id: " + venueId));
+
+        int safeLimit = Math.max(
+                1,
+                Math.min(limit, 6));
+
+        List<Venue> nearbyVenues;
+        if (sourceVenue.getLatitude() != null
+                && sourceVenue.getLongitude() != null) {
+            nearbyVenues = venueRepository
+                    .findNearbyByCoordinates(
+                            sourceVenue.getId(),
+                            sourceVenue.getLatitude(),
+                            sourceVenue.getLongitude(),
+                            safeLimit);
+        } else {
+            Pageable pageable = PageRequest.of(0, safeLimit);
+            nearbyVenues = venueRepository
+                    .findByActiveTrueAndIdNotAndCityIgnoreCaseOrderByNameAsc(
+                            sourceVenue.getId(),
+                            sourceVenue.getCity(),
+                            pageable);
+        }
+
+        List<Long> nearbyVenueIds = new ArrayList<>();
+
+        for (Venue venue : nearbyVenues) {
+            nearbyVenueIds.add(venue.getId());
+        }
+
+        List<Court> courts;
+
+        if (nearbyVenueIds.isEmpty()) {
+            courts = List.of();
+        } else {
+            courts = courtRepository
+                    .findAllByVenue_IdInAndActiveTrue(nearbyVenueIds);
+        }
+
+        Map<Long, List<Court>> courtsByVenueId = new HashMap<>();
+
+        for (Court court : courts) {
+            Long courtVenueId = court.getVenue().getId();
+
+            if (!courtsByVenueId.containsKey(
+                    courtVenueId)) {
+                courtsByVenueId.put(
+                        courtVenueId,
+                        new ArrayList<>());
+            }
+
+            courtsByVenueId
+                    .get(courtVenueId)
+                    .add(court);
+        }
+
+        List<VenueSummaryResponse> responses = new ArrayList<>();
+
+        for (Venue venue : nearbyVenues) {
+            List<Court> venueCourts = courtsByVenueId.getOrDefault(
+                    venue.getId(),
+                    List.of());
+
+            responses.add(
+                    convertToSummaryResponse(
+                            venue,
+                            venueCourts));
+        }
+
+        return responses;
     }
 
     // 查询
@@ -155,8 +235,7 @@ public class VenueService {
                 buildAddress(venue),
                 sports,
                 startingPrice,
-                venue.getImageUrl()
-            );
+                venue.getImageUrl());
     }
 
     // 加入地址组合方法

@@ -10,6 +10,9 @@ import com.shenq.courtbooking.venue.repository.VenueRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.ArrayList;
+
 @Service
 public class CourtService {
 
@@ -44,6 +47,21 @@ public class CourtService {
         Court savedCourt = courtRepository.save(court);
 
         return convertToResponse(savedCourt);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourtResponse>getActiveCourtsByVenueId(
+        Long venueId
+    ){
+        List<Court>courts=courtRepository
+                                .findAllByVenue_IdAndActiveTrueOrderByCourtNumberAsc(venueId);
+
+        List<CourtResponse> responses = new ArrayList<>();
+
+        for(Court court: courts){
+                responses.add(convertToResponse(court));
+        }
+        return responses;
     }
 
     private CourtResponse convertToResponse(Court court) {

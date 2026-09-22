@@ -5,6 +5,7 @@ import VenueSection from './components/VenueSection'
 import { Route, Routes } from 'react-router'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import VenueDetailsPage from './pages/VenueDetailsPage'
 
 function App() {
   return (
@@ -21,8 +22,13 @@ function App() {
         <Route path="/login"
           element={<LoginPage />}
         />
+        
         <Route path="/register"
         element={<RegisterPage/>}
+        />
+
+        <Route path="/venues/:venueId"
+        element={<VenueDetailsPage/>}
         />
       </Routes>
     </div>

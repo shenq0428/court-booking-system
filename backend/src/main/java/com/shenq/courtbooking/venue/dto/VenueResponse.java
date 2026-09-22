@@ -16,6 +16,7 @@ public class VenueResponse {
     private BigDecimal longitude;
     private String phoneNumber;
     private boolean active;
+    private String imageUrl;
 
     public VenueResponse(
             Long id,
@@ -29,8 +30,9 @@ public class VenueResponse {
             BigDecimal latitude,
             BigDecimal longitude,
             String phoneNumber,
+            String imageUrl,
             boolean active
-    ) {
+        ) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -42,6 +44,7 @@ public class VenueResponse {
         this.latitude = latitude;
         this.longitude = longitude;
         this.phoneNumber = phoneNumber;
+        this.imageUrl = imageUrl;
         this.active = active;
     }
 
@@ -87,6 +90,10 @@ public class VenueResponse {
 
     public String getPhoneNumber() {
         return phoneNumber;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public boolean isActive() {

@@ -1,6 +1,6 @@
 import {useEffect, useState,} from 'react'
+import {useNavigate,} from 'react-router'
 import VenueCard from './VenueCard'
-import AvailabilityPanel from './AvailabilityPanel'
 import type {ApiSportType,Sport,Venue, VenuePageResponse,VenueSummaryResponse,} from '../types/venues'
 import sungaiBulohCourtImage from '../assets/venues/sungai-buloh-court.png'
 
@@ -45,11 +45,11 @@ function VenueSection() {
 
     const [totalVenues, setTotalVenues] = useState(0)
 
-    const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
-
     const [isLoading, setIsLoading] = useState(true)
 
     const [error, setError] = useState<string | null>(null)
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         async function loadVenues() {
@@ -84,7 +84,7 @@ function VenueSection() {
     }, [])
 
     function handleViewTimes(venue: Venue) {
-        setSelectedVenue(venue)
+        navigate(`/venues/${venue.id}`)
     }
 
     return (
@@ -128,12 +128,6 @@ function VenueSection() {
                 </div>
             )}
 
-            {selectedVenue && (
-                <AvailabilityPanel
-                    key={selectedVenue.id}
-                    venue={selectedVenue}
-                />
-            )}
         </section>
     )
 }
