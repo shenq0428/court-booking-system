@@ -31,7 +31,8 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
-                                "/api/auth/logout"
+                                "/api/auth/logout",
+                                "/api/bookings/**"
                         ).permitAll().requestMatchers("/api/auth/me").authenticated().anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()) );

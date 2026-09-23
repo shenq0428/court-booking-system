@@ -21,67 +21,32 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(
-        name = "bookings",
-        indexes = {
-                @Index(
-                        name = "idx_booking_court_start",
-                        columnList = "court_id,start_at"
-                ),
-                @Index(
-                        name = "idx_booking_user_created",
-                        columnList = "user_id,created_at"
-                ),
-                @Index(
-                        name = "idx_booking_status_expiry",
-                        columnList = "status,expires_at"
-                )
-        }
-)
+@Table(name = "bookings", indexes = {
+        @Index(name = "idx_booking_court_start", columnList = "court_id,start_at"),
+        @Index(name = "idx_booking_user_created", columnList = "user_id,created_at"),
+        @Index(name = "idx_booking_status_expiry", columnList = "status,expires_at")
+})
 public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
-    @JoinColumn(
-            name = "user_id",
-            nullable = false
-    )
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
-    @JoinColumn(
-            name = "court_id",
-            nullable = false
-    )
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "court_id", nullable = false)
     private Court court;
 
-    @Column(
-            name = "start_at",
-            nullable = false
-    )
+    @Column(name = "start_at", nullable = false)
     private Instant startAt;
 
-    @Column(
-            name = "end_at",
-            nullable = false
-    )
+    @Column(name = "end_at", nullable = false)
     private Instant endAt;
 
-    @Column(
-            name = "price_at_booking",
-            nullable = false,
-            precision = 10,
-            scale = 2
-    )
+    @Column(name = "price_at_booking", nullable = false, precision = 10, scale = 2)
     private BigDecimal priceAtBooking;
 
     @Enumerated(EnumType.STRING)
@@ -91,11 +56,7 @@ public class Booking {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(
-            name = "created_at",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "confirmed_at")
@@ -108,7 +69,6 @@ public class Booking {
     private Long version;
 
     protected Booking() {
-        // JPA requires a no-argument constructor.
     }
 
     public Booking(
@@ -117,17 +77,26 @@ public class Booking {
             Instant startAt,
             Instant endAt,
             BigDecimal priceAtBooking,
-            Instant expiresAt,
-            Instant createdAt
-    ) {
+            Instant createdAt,
+            Instant expiresAt) {
         this.user = user;
         this.court = court;
         this.startAt = startAt;
         this.endAt = endAt;
         this.priceAtBooking = priceAtBooking;
-        this.expiresAt = expiresAt;
         this.createdAt = createdAt;
+        this.expiresAt = expiresAt;
         this.status = BookingStatus.PENDING_PAYMENT;
+
+    }
+
+    public boolean isPaymentPending() {
+        return status == BookingStatus.PENDING_PAYMENT;
+    }
+
+    public boolean isExpiredAt(Instant now) {
+        return status == BookingStatus.PENDING_PAYMENT
+                && !now.isBefore(expiresAt);
     }
 
     public void confirm(Instant confirmedAt) {
@@ -139,6 +108,10 @@ public class Booking {
             throw new IllegalStateException("Only a pending booking can be confirmed");
         }
 
+        if (!confirmedAt.isBefore(expiresAt)) {
+            throw new IllegalStateException("Expired booking cannot be confirmed");
+        }
+
         this.status = BookingStatus.CONFIRMED;
         this.confirmedAt = confirmedAt;
     }
@@ -148,40 +121,32 @@ public class Booking {
             return;
         }
 
-        if (
-                status != BookingStatus.PENDING_PAYMENT &&
-                status != BookingStatus.CONFIRMED
-        ) {
-            throw new IllegalStateException( "This booking cannot be cancelled" );
+        if (status != BookingStatus.PENDING_PAYMENT
+                && status != BookingStatus.CONFIRMED) {
+            throw new IllegalStateException(
+                    "This booking cannot be cancelled");
         }
 
         this.status = BookingStatus.CANCELLED;
         this.cancelledAt = cancelledAt;
     }
 
-    public void expire(Instant expiredAt) {
+    public void expire(Instant now) {
         if (status == BookingStatus.EXPIRED) {
             return;
         }
 
         if (status != BookingStatus.PENDING_PAYMENT) {
-            throw new IllegalStateException("Only a pending booking can expire");
+            throw new IllegalStateException(
+                    "Only a pending booking can expire");
         }
 
-        if (expiresAt.isAfter(expiredAt)) {
-            throw new IllegalStateException("The booking has not expired yet");
+        if (now.isBefore(expiresAt)) {
+            throw new IllegalStateException(
+                    "The booking has not expired yet");
         }
 
         this.status = BookingStatus.EXPIRED;
-    }
-
-    public boolean isPaymentPending() {
-        return status == BookingStatus.PENDING_PAYMENT;
-    }
-
-    public boolean isExpiredAt(Instant now) {
-        return status == BookingStatus.PENDING_PAYMENT
-                && !expiresAt.isAfter(now);
     }
 
     public Long getId() {
@@ -231,4 +196,5 @@ public class Booking {
     public Long getVersion() {
         return version;
     }
+
 }
