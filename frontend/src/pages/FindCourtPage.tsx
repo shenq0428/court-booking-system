@@ -1,4 +1,4 @@
-import {useEffect,useState,type FormEvent} from 'react'
+import {useEffect,useState,type SubmitEvent} from 'react'
 import {useNavigate,useSearchParams,} from 'react-router'
 import VenueCard from '../components/VenueCard'
 import './FindCourtPage.css'
@@ -78,20 +78,15 @@ function FindCourtPage() {
     /*
      * These states hold the API result.
      */
-    const [venues, setVenues] =
-        useState<Venue[]>([])
+    const [venues, setVenues] =        useState<Venue[]>([])
 
-    const [totalElements, setTotalElements] =
-        useState(0)
+    const [totalElements, setTotalElements] =       useState(0)
 
-    const [totalPages, setTotalPages] =
-        useState(0)
+    const [totalPages, setTotalPages] =      useState(0)
 
-    const [isLoading, setIsLoading] =
-        useState(true)
+    const [isLoading, setIsLoading] = useState(true)
 
-    const [error, setError] =
-        useState<string | null>(null)
+    const [error, setError] =       useState<string | null>(null)
 
     /*
      * Keep input fields synchronized when the URL changes,
@@ -237,7 +232,7 @@ function FindCourtPage() {
     ])
 
     function handleSearch(
-        event: FormEvent<HTMLFormElement>,
+        event: SubmitEvent<HTMLFormElement>,
     ) {
         event.preventDefault()
 

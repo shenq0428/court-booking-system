@@ -26,6 +26,10 @@ public interface BookingRepository
                         BookingStatus status,
                         Instant now);
 
+        List<Booking> findAllByStatusAndExpiresAtLessThanEqual(
+                        BookingStatus status,
+                        Instant now);
+
         @Query("""
                         SELECT COUNT(booking)
                         FROM Booking booking
@@ -51,5 +55,27 @@ public interface BookingRepository
 
                         @Param("pendingStatus") BookingStatus pendingStatus,
 
+                        @Param("now") Instant now);
+
+        @Query("""
+                        SELECT booking
+                        FROM Booking booking
+                        WHERE booking.court.venue.id = :venueId
+                          AND booking.startAt < :dayEnd
+                          AND booking.endAt > :dayStart
+                          AND (
+                                booking.status = :confirmedStatus
+                                OR (
+                                    booking.status = :pendingStatus
+                                    AND booking.expiresAt > :now
+                                )
+                          )
+                        """)
+        List<Booking> findBlockingBookingsForVenue(
+                        @Param("venueId") Long venueId,
+                        @Param("dayStart") Instant dayStart,
+                        @Param("dayEnd") Instant dayEnd,
+                        @Param("confirmedStatus") BookingStatus confirmedStatus,
+                        @Param("pendingStatus") BookingStatus pendingStatus,
                         @Param("now") Instant now);
 }

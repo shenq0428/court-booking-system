@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VenueDetailsPage from './pages/VenueDetailsPage'
 import FindCourtPage from './pages/FindCourtPage'
+import MyBookingsPage from './pages/MyBookingsPage'
 
 function App() {
   return (
@@ -36,6 +37,11 @@ function App() {
           path="/find-court"
           element={<FindCourtPage />}
         />
+
+        <Route
+         path="/my-bookings"
+         element={<MyBookingsPage/>}
+         />
       </Routes>
     </div>
   )

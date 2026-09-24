@@ -116,15 +116,13 @@ public class Booking {
         this.confirmedAt = confirmedAt;
     }
 
-    public void cancel(Instant cancelledAt) {
+    public void cancelPending(Instant cancelledAt) {
         if (status == BookingStatus.CANCELLED) {
             return;
         }
 
-        if (status != BookingStatus.PENDING_PAYMENT
-                && status != BookingStatus.CONFIRMED) {
-            throw new IllegalStateException(
-                    "This booking cannot be cancelled");
+        if (status != BookingStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException("Only a pending booking can be cancelled");
         }
 
         this.status = BookingStatus.CANCELLED;

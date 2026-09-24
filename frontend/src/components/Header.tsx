@@ -61,8 +61,7 @@ function Header() {
                     </NavLink>
 
                     <Link
-                        to="/#find-court"
-                        state={{returnTo: '/my-bookings',}}
+                        to="/my-bookings"
                     >
                         My bookings
                     </Link>

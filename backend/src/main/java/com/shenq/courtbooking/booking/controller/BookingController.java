@@ -14,30 +14,49 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
-public class BookingController{
+public class BookingController {
     private final BookingService bookingService;
 
     public BookingController(
-        BookingService bookingService
-    ){
+            BookingService bookingService) {
         this.bookingService = bookingService;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BookingResponse createBooking(
-        @AuthenticationPrincipal Jwt jwt,
-        @Valid @RequestBody
-        BookingCreateRequest request
-    ){
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody BookingCreateRequest request) {
         Long userId = Long.valueOf(jwt.getSubject());
 
         return bookingService.createBooking(
-            userId,
-            request
-        );
+                userId,
+                request);
+    }
+
+    @GetMapping("/me")
+    public List<BookingResponse> getMyBookings(
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = Long.valueOf(jwt.getSubject());
+
+        return bookingService.getMyBookings(userId);
+    }
+
+    @PostMapping("/{bookingId}/cancel")
+    public BookingResponse cancelPendingBooking(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long bookingId) {
+        Long userId = Long.valueOf(jwt.getSubject());
+
+        return bookingService.cancelPendingBooking(
+                userId,
+                bookingId);
     }
 }

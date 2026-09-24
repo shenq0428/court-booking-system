@@ -1,27 +1,46 @@
-import { useEffect, useState,} from 'react'
-import {Link, useParams,} from 'react-router'
-import type {CourtResponse,VenueDetailsResponse, VenueSummaryResponse,} from '../types/venues'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router'
+import AvailabilityPanel from '../components/AvailabilityPanel'
+import type { CourtResponse, Venue, VenueDetailsResponse,VenueSummaryResponse,} from '../types/venues'
 import fallbackVenueImage from '../assets/venues/sungai-buloh-court.png'
-
 
 function VenueDetailsPage() {
     const { venueId } = useParams()
-    const [venue, setVenue] = useState<VenueDetailsResponse | null>(null)
-    const [courts, setCourts] = useState<CourtResponse[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [nearbyVenues, setNearbyVenues] = useState<VenueSummaryResponse[]>([])
 
+    const [venue, setVenue] =
+        useState<VenueDetailsResponse | null>(null)
+
+    const [courts, setCourts] =
+        useState<CourtResponse[]>([])
+
+    const [nearbyVenues, setNearbyVenues] =
+        useState<VenueSummaryResponse[]>([])
+
+    const [isLoading, setIsLoading] =
+        useState(true)
+
+    const [error, setError] =
+        useState<string | null>(null)
+
+    const [showAvailability, setShowAvailability] =
+        useState(false)
+
+    const availabilityRef =
+        useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
-        // GET /api/venues/{id}
-    // GET /api/venues/{id}/courts
         async function loadVenueDetails() {
             if (!venueId) {
                 setError('Invalid venue ID.')
                 setIsLoading(false)
                 return
             }
+
+            setIsLoading(true)
+            setError(null)
+            setVenue(null)
+            setCourts([])
+            setShowAvailability(false)
 
             try {
                 const [
@@ -37,16 +56,17 @@ function VenueDetailsPage() {
                 ])
 
                 if (
-                     !venueResponse.ok|| !courtsResponse.ok
+                    !venueResponse.ok ||
+                    !courtsResponse.ok
                 ) {
                     throw new Error(
                         'Failed to load venue details.',
                     )
                 }
 
-                const venueData = await venueResponse.json() as VenueDetailsResponse
+                const venueData =                await venueResponse.json()   as VenueDetailsResponse
 
-                const courtsData = await courtsResponse.json()as CourtResponse[]
+                const courtsData =   await courtsResponse.json() as CourtResponse[]
 
                 setVenue(venueData)
                 setCourts(courtsData)
@@ -58,40 +78,60 @@ function VenueDetailsPage() {
                 setIsLoading(false)
             }
         }
-        
+
         void loadVenueDetails()
     }, [venueId])
 
     useEffect(() => {
-        // GET /api/venues/{id}/nearby
-    if (!venueId) {
-        return
-    }
-
-    async function loadNearbyVenues() {
-        setNearbyVenues([])
-
-        try {
-            const response = await fetch(
-                `http://localhost:8080/api/venues/${venueId}/nearby?limit=3`,
-            )
-
-            if (!response.ok) {
-                return
-            }
-
-            const nearbyData = await response.json() as VenueSummaryResponse[]
-
-            setNearbyVenues(nearbyData)
-        } catch {
-            // Nearby venues are optional.
-            // The main Venue page can still work.
+        if (!venueId) {
+            return
         }
+
+        async function loadNearbyVenues() {
+            setNearbyVenues([])
+
+            try {
+                const response = await fetch(
+                    `http://localhost:8080/api/venues/${venueId}/nearby?limit=3`,
+                )
+
+                if (!response.ok) {
+                    return
+                }
+
+                const nearbyData =                await response.json()    as VenueSummaryResponse[]
+
+                setNearbyVenues(nearbyData)
+            } catch {
+                // Nearby venues are optional.
+            }
+        }
+
+        void loadNearbyVenues()
+    }, [venueId])
+
+    useEffect(() => {
+        if (!showAvailability) {
+            return
+        }
+
+        availabilityRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        })
+    }, [showAvailability])
+
+    function handleViewAvailability() {
+        if (showAvailability) {
+            availabilityRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            })
+            return
+        }
+
+        setShowAvailability(true)
     }
-
-    void loadNearbyVenues()
-}, [venueId])
-
 
     if (isLoading) {
         return (
@@ -126,10 +166,43 @@ function VenueDetailsPage() {
         .join(', ')
 
     const googleMapsUrl =
-        venue.latitude !== null
-        && venue.longitude !== null
+        venue.latitude !== null &&
+        venue.longitude !== null
             ? `https://www.google.com/maps/search/?api=1&query=${venue.latitude},${venue.longitude}`
             : null
+
+    const venueSports: Venue['sports'] = []
+
+    for (const court of courts) {
+        const sport: Venue['sports'][number] =
+            court.sport === 'BADMINTON'
+                ? 'Badminton'
+                : 'Pickleball'
+
+        if (!venueSports.includes(sport)) {
+            venueSports.push(sport)
+        }
+    }
+
+    const courtPrices = courts.map(
+        (court) => court.pricePerHour,
+    )
+
+    const startingPrice =
+        courtPrices.length > 0
+            ? Math.min(...courtPrices)
+            : 0
+
+    const availabilityVenue: Venue = {
+        id: venue.id,
+        name: venue.name,
+        address: fullAddress,
+        sports: venueSports,
+        pricePerHour: startingPrice,
+        isOpen: venue.active && courts.length > 0,
+        imageUrl:
+            venue.imageUrl ?? fallbackVenueImage,
+    }
 
     return (
         <main className="venue-details-page">
@@ -158,7 +231,10 @@ function VenueDetailsPage() {
 
                     <p>{fullAddress}</p>
 
-                    <button type="button">
+                    <button
+                        type="button"
+                        onClick={handleViewAvailability}
+                    >
                         View Availability
                     </button>
                 </div>
@@ -185,7 +261,8 @@ function VenueDetailsPage() {
 
                     {courts.length === 0 ? (
                         <p>
-                            No active courts are currently available.
+                            No active courts are currently
+                            available.
                         </p>
                     ) : (
                         <div className="court-details-grid">
@@ -232,68 +309,88 @@ function VenueDetailsPage() {
                 </section>
             </div>
 
-            {nearbyVenues.length > 0 && (
-    <section className="nearby-venues-section">
-        <div className="nearby-venues-heading">
-            <div>
-                <p>Explore more</p>
-                <h2>Venues Nearby</h2>
-            </div>
-
-            <Link to="/">
-                View all venues →
-            </Link>
-        </div>
-
-        <div className="nearby-venues-grid">
-            {nearbyVenues.map((nearbyVenue) => (
-                <Link
-                    className="nearby-venue-card"
-                    key={nearbyVenue.id}
-                    to={`/venues/${nearbyVenue.id}`}
+            {showAvailability && (
+                <div
+                    className="venue-availability-section"
+                    ref={availabilityRef}
                 >
-                    <img
-                        src={
-                            nearbyVenue.imageUrl
-                            ?? fallbackVenueImage
-                        }
-                        alt={nearbyVenue.name}
+                    <AvailabilityPanel
+                        venue={availabilityVenue}
                     />
+                </div>
+            )}
 
-                    <div className="nearby-venue-content">
-                        <div className="nearby-venue-sports">
-                            {nearbyVenue.sports.map(
-                                (sport) => (
-                                    <span key={sport}>
-                                        {sport === 'BADMINTON'
-                                            ? 'Badminton'
-                                            : 'Pickleball'}
-                                    </span>
-                                ),
-                            )}
+            {nearbyVenues.length > 0 && (
+                <section className="nearby-venues-section">
+                    <div className="nearby-venues-heading">
+                        <div>
+                            <p>Explore more</p>
+                            <h2>Venues Nearby</h2>
                         </div>
 
-                        <h3>{nearbyVenue.name}</h3>
-
-                        <p>{nearbyVenue.address}</p>
-
-                        <div className="nearby-venue-footer">
-                            <strong>
-                                {nearbyVenue
-                                    .startingPricePerHour
-                                    !== null
-                                    ? `From RM ${nearbyVenue.startingPricePerHour}/hour`
-                                    : 'Pricing unavailable'}
-                            </strong>
-
-                            <span>See venue →</span>
-                        </div>
+                        <Link to="/">
+                            View all venues →
+                        </Link>
                     </div>
-                </Link>
-            ))}
-        </div>
-    </section>
-)}
+
+                    <div className="nearby-venues-grid">
+                        {nearbyVenues.map(
+                            (nearbyVenue) => (
+                                <Link
+                                    className="nearby-venue-card"
+                                    key={nearbyVenue.id}
+                                    to={`/venues/${nearbyVenue.id}`}
+                                >
+                                    <img
+                                        src={
+                                            nearbyVenue.imageUrl
+                                            ?? fallbackVenueImage
+                                        }
+                                        alt={nearbyVenue.name}
+                                    />
+
+                                    <div className="nearby-venue-content">
+                                        <div className="nearby-venue-sports">
+                                            {nearbyVenue.sports.map(
+                                                (sport) => (
+                                                    <span key={sport}>
+                                                        {sport ===
+                                                        'BADMINTON'
+                                                            ? 'Badminton'
+                                                            : 'Pickleball'}
+                                                    </span>
+                                                ),
+                                            )}
+                                        </div>
+
+                                        <h3>
+                                            {nearbyVenue.name}
+                                        </h3>
+
+                                        <p>
+                                            {nearbyVenue.address}
+                                        </p>
+
+                                        <div className="nearby-venue-footer">
+                                            <strong>
+                                                {nearbyVenue
+                                                    .startingPricePerHour
+                                                !== null
+                                                    ? `From RM ${nearbyVenue.startingPricePerHour}/hour`
+                                                    : 'Pricing unavailable'}
+                                            </strong>
+
+                                            <span>
+                                                See venue →
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ),
+                        )}
+                    </div>
+                </section>
+            )}
         </main>
     )
 }
