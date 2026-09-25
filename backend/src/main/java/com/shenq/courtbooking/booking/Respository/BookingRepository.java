@@ -6,7 +6,9 @@ import com.shenq.courtbooking.booking.entity.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
 
+import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -14,21 +16,29 @@ import java.util.Optional;
 public interface BookingRepository
                 extends JpaRepository<Booking, Long> {
 
-        Optional<Booking> findByIdAndUser_Id(
+        Optional<Booking> 
+        findByIdAndUser_Id(
                         Long bookingId,
-                        Long userId);
+                        Long userId
+                      );
 
-        List<Booking> findAllByUser_IdOrderByStartAtDesc(
-                        Long userId);
+        List<Booking> 
+        findAllByUser_IdOrderByStartAtDesc(
+                        Long userId
+                      );
 
-        List<Booking> findAllByCourt_IdAndStatusAndExpiresAtLessThanEqual(
+        List<Booking> 
+        findAllByCourt_IdAndStatusAndExpiresAtLessThanEqual(
                         Long courtId,
                         BookingStatus status,
-                        Instant now);
+                        Instant now
+                      );
 
-        List<Booking> findAllByStatusAndExpiresAtLessThanEqual(
+        List<Booking> 
+        findAllByStatusAndExpiresAtLessThanEqual(
                         BookingStatus status,
-                        Instant now);
+                        Instant now
+                      );
 
         @Query("""
                         SELECT COUNT(booking)
@@ -71,11 +81,25 @@ public interface BookingRepository
                                 )
                           )
                         """)
-        List<Booking> findBlockingBookingsForVenue(
+        List<Booking> 
+        findBlockingBookingsForVenue(
                         @Param("venueId") Long venueId,
                         @Param("dayStart") Instant dayStart,
                         @Param("dayEnd") Instant dayEnd,
                         @Param("confirmedStatus") BookingStatus confirmedStatus,
                         @Param("pendingStatus") BookingStatus pendingStatus,
                         @Param("now") Instant now);
+
+@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("""
+        SELECT booking
+        FROM Booking booking
+        WHERE booking.id = :bookingId
+          AND booking.user.id = :userId
+        """)
+Optional<Booking> findOwnedBookingForUpdate(
+        @Param("bookingId") Long bookingId,
+        @Param("userId") Long userId
+);
+
 }

@@ -12,8 +12,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(EmailAlreadyRegisteredException.class)
     public ResponseEntity<ApiErrorResponse> handleEmailAlreadyRegistered(
             EmailAlreadyRegisteredException exception,
@@ -106,7 +111,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
             DataIntegrityViolationException exception,
-            HttpServletRequest request) {
+            HttpServletRequest request
+        ) {
+        LOGGER.error("Database integrity violation for {} {}",request.getMethod(),request.getRequestURI(),exception);
 
         HttpStatus status = HttpStatus.CONFLICT;
 
@@ -114,7 +121,7 @@ public class GlobalExceptionHandler {
                 Instant.now(),
                 status.value(),
                 status.getReasonPhrase(),
-                "The requested booking is no longer available",
+                "A database conflict occurred while processing the request",
                 request.getRequestURI());
 
         return ResponseEntity

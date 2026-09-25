@@ -135,16 +135,31 @@ public class Booking {
         }
 
         if (status != BookingStatus.PENDING_PAYMENT) {
-            throw new IllegalStateException(
-                    "Only a pending booking can expire");
+            throw new IllegalStateException( "Only a pending booking can expire");
         }
 
         if (now.isBefore(expiresAt)) {
-            throw new IllegalStateException(
-                    "The booking has not expired yet");
+            throw new IllegalStateException( "The booking has not expired yet");
         }
 
         this.status = BookingStatus.EXPIRED;
+    }
+
+    public void extendPaymentExpiry(
+            Instant newExpiresAt) {
+        if (status != BookingStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException(  "Only a pending booking can extend its payment expiry");
+        }
+
+        if (newExpiresAt == null) {
+            throw new IllegalArgumentException("New payment expiry is required");
+        }
+
+        if (!newExpiresAt.isAfter(expiresAt)) {
+            return;
+        }
+
+        this.expiresAt = newExpiresAt;
     }
 
     public Long getId() {

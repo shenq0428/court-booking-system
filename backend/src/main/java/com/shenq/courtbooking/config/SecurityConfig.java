@@ -7,6 +7,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,11 +33,32 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
-                                "/api/auth/logout",
-                                "/api/bookings/**"
-                        ).permitAll().requestMatchers("/api/auth/me").authenticated().anyRequest().permitAll()
+                                "/api/auth/logout"
+                        ).permitAll()
+
+                        .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/payments/webhook"
+                        ).permitAll()
+
+                        .requestMatchers(
+                            "/api/bookings/**",
+                            "/api/payments/**"
+                        ).hasRole("CUSTOMER")
+
+                        .requestMatchers(
+                            "/api/auth/me"
+                        ).authenticated()
+                        .anyRequest()
+                        .permitAll()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()) );
+                .oauth2ResourceServer(oauth2 -> 
+                    oauth2.jwt(
+                        jwt-> jwt.jwtAuthenticationConverter(
+                        jwtAuthenticationConverter() 
+                        )
+                    )
+                );
 
         return http.build();
     }
@@ -53,4 +76,19 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/api/**",configuration);
         return source;
     }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter(){
+        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+
+        authoritiesConverter.setAuthoritiesClaimName("role");
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter authenticationConverter =new JwtAuthenticationConverter();
+
+        authenticationConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        
+        return authenticationConverter;
+    }
+
 }

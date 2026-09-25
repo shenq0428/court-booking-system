@@ -17,6 +17,9 @@ import java.util.Base64;
 @Configuration
 public class JwtConfig {
 
+// SecretKey = 印章
+// JwtEncoder = 制作并盖章通行证
+// JwtDecoder = 检查通行证上的印章
     @Bean
     public SecretKey jwtSecretKey(
             @Value("${app.security.jwt.secret}") String encodedSecret) {
