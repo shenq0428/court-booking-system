@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import type { BookingResponse, BookingStatus } from '../types/bookings'
+import { createPaymentCheckout } from '../api/payments'
 
 function formatDateTime(value: string) {
     return new Intl.DateTimeFormat('en-MY', {
@@ -24,8 +25,8 @@ function MyBookingsPage() {
     const [bookings, setBookings] = useState<BookingResponse[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [cancellingBookingId, setCancellingBookingId] =
-        useState<number | null>(null)
+    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+    const [payingBookingId, setPayingBookingId] = useState<number | null>(null)
 
     useEffect(() => {
         if (!accessToken) {
@@ -76,6 +77,22 @@ function MyBookingsPage() {
         void loadBookings()
     }, [accessToken, clearSession])
 
+    async function handlePayNow(bookingId: number) {
+        if (!accessToken) return
+
+        setPayingBookingId(bookingId)
+        setError(null)
+
+        try {
+            const checkout = await createPaymentCheckout(bookingId, accessToken)
+            window.location.assign(checkout.checkoutUrl)
+        } catch (caughtError) {
+            setError(caughtError instanceof Error ? caughtError.message : 'Unable to start payment.',)
+        } finally {
+            setPayingBookingId(null)
+        }
+    }
+
     async function handleCancelBooking(bookingId: number) {
         if (!accessToken) {
             return
@@ -124,8 +141,7 @@ function MyBookingsPage() {
                 throw new Error('Failed to cancel the booking.')
             }
 
-            const updatedBooking =
-                await response.json() as BookingResponse
+            const updatedBooking = await response.json() as BookingResponse
 
             setBookings((currentBookings) =>
                 currentBookings.map((booking) =>
@@ -183,6 +199,8 @@ function MyBookingsPage() {
                 < Date.now()
             ),
     )
+
+    const isProcessing = payingBookingId !== null || cancellingBookingId !== null
 
     function renderBookingCard(booking: BookingResponse) {
         return (
@@ -250,22 +268,28 @@ function MyBookingsPage() {
                     </Link>
 
                     {booking.status === 'PENDING_PAYMENT' && (
-                        <button
-                            type="button"
-                            disabled={
-                                cancellingBookingId
-                                === booking.id
-                            }
-                            onClick={() =>
-                                void handleCancelBooking(
-                                    booking.id,
-                                )
-                            }
-                        >
-                            {cancellingBookingId === booking.id
-                                ? 'Cancelling...'
-                                : 'Cancel booking'}
-                        </button>
+                        <>
+                            <button
+                                className="booking-pay-button"
+                                type="button"
+                                disabled={isProcessing}
+                                onClick={() => void handlePayNow(booking.id)}
+                            >
+                                {payingBookingId === booking.id
+                                    ? 'Opening Stripe...'
+                                    : 'Pay now'}
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={isProcessing}
+                                onClick={() => void handleCancelBooking(booking.id)}
+                            >
+                                {cancellingBookingId === booking.id
+                                    ? 'Cancelling...'
+                                    : 'Cancel booking'}
+                            </button>
+                        </>
                     )}
                 </div>
             </article>

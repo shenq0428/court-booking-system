@@ -5,6 +5,7 @@ import com.shenq.courtbooking.booking.repository.BookingRepository;
 import com.shenq.courtbooking.common.exception.BookingConflictException;
 import com.shenq.courtbooking.payment.dto.PaymentCheckoutRequest;
 import com.shenq.courtbooking.payment.dto.PaymentCheckoutResponse;
+import com.shenq.courtbooking.payment.dto.PaymentStatusResponse;
 import com.shenq.courtbooking.payment.entity.Payment;
 import com.shenq.courtbooking.payment.entity.PaymentProvider;
 import com.shenq.courtbooking.payment.entity.PaymentStatus;
@@ -247,8 +248,31 @@ public class PaymentService {
     private long convertRinggitToSen(
             BigDecimal amount
         ) {
-        return amount
-                .movePointRight(2)
-                .longValueExact();
+        return amount .movePointRight(2).longValueExact();
     }
+
+    @Transactional(readOnly = true)
+        public PaymentStatusResponse getCheckoutStatus(
+                Long userId,
+                String sessionId
+                ) {
+    if (sessionId == null || sessionId.isBlank()) {
+        throw new IllegalArgumentException("Checkout Session ID is required");
+    }
+
+    Payment payment = paymentRepository
+            .findByProviderSessionIdAndBooking_User_Id( sessionId, userId)
+            .orElseThrow(() -> new IllegalArgumentException( "Payment session not found")
+            );
+
+    Booking booking = payment.getBooking();
+
+    return new PaymentStatusResponse(
+            payment.getId(),
+            booking.getId(),
+            payment.getStatus(),
+            booking.getStatus()
+    );
+}
+
 }

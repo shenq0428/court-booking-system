@@ -9,6 +9,7 @@ import VenueDetailsPage from './pages/VenueDetailsPage'
 import FindCourtPage from './pages/FindCourtPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import CustomerRoute from './auth/CustomerRoute'
+import PaymentSuccessPage from './pages/PaymentSuccessPage'
 
 function App() {
   return (
@@ -44,6 +45,11 @@ function App() {
             element={<MyBookingsPage />}
           />
         </Route>
+
+          <Route 
+            path="/payment/success"
+            element={<PaymentSuccessPage/>}
+          />
 
       </Routes>
     </div>
