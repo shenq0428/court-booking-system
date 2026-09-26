@@ -5,6 +5,7 @@ type AuthContextValue = {
     user: AuthUser | null
     accessToken: string | null
     isAuthenticated: boolean
+    isRestoringSession: boolean
     startSession: (loginResponse: LoginResponse,) => void
     clearSession: () => void
 }
@@ -16,8 +17,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined,)
 export function AuthProvider({ children, }: AuthProviderProps) {
     const [user, setUser] = useState<AuthUser | null>(null)
     const [accessToken, setAccessToken] = useState<string | null>(null)
-
+    const [isRestoringSession, setIsRestoringSession] = useState(true)
     const hasTriedToRestoreSession = useRef(false)
+
     useEffect(() => {
         if (hasTriedToRestoreSession.current) {
             return
@@ -26,8 +28,7 @@ export function AuthProvider({ children, }: AuthProviderProps) {
 
         async function restoreSession() {
             try {
-                const response = await fetch(
-                    'http://localhost:8080/api/auth/refresh',
+                const response = await fetch('http://localhost:8080/api/auth/refresh',
                     {
                         method: 'POST',
                         credentials: 'include',
@@ -49,6 +50,8 @@ export function AuthProvider({ children, }: AuthProviderProps) {
             } catch {
                 // Server unavailable:
                 // remain logged out for now.
+            }finally{
+                setIsRestoringSession(false)
             }
         }
         void restoreSession()
@@ -64,11 +67,14 @@ export function AuthProvider({ children, }: AuthProviderProps) {
             email: loginResponse.email,
             role: loginResponse.role,
         })
+
+        setIsRestoringSession(false)
     }
 
     function clearSession() {
         setAccessToken(null)
         setUser(null)
+        setIsRestoringSession(false)
     }
 
     const isAuthenticated = accessToken !== null
@@ -79,6 +85,7 @@ export function AuthProvider({ children, }: AuthProviderProps) {
                 user,
                 accessToken,
                 isAuthenticated,
+                isRestoringSession,
                 startSession,
                 clearSession,
             }}

@@ -3,7 +3,7 @@ import { Link, NavLink, } from 'react-router'
 import {useAuth,} from '../auth/AuthContext'
 
 function Header() {
-    const auth = useAuth()
+    const {user, isAuthenticated, clearSession} = useAuth()
     const logoutDialog = useRef<HTMLDialogElement>(null)
     const cancelLogoutButton = useRef<HTMLButtonElement>(null)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -31,7 +31,7 @@ function Header() {
                 throw new Error('Logout request failed',)
             }
             logoutDialog.current?.close()
-            auth.clearSession()
+            clearSession()
         }catch{
             setLogoutError('Unable to log out. Please try again.')
         } finally {
@@ -59,15 +59,17 @@ function Header() {
                     >
                         Find a Court
                     </NavLink>
-
+                    {isAuthenticated && user?.role === 'CUSTOMER' &&(
                     <Link
                         to="/my-bookings"
                     >
                         My bookings
                     </Link>
+                )}
+
                 </nav>
 
-                {!auth.isAuthenticated?(<div className="header-auth-actions">
+                {!isAuthenticated?(<div className="header-auth-actions">
                     <Link
                         className="header-login-link"
                         to="/login"
@@ -83,7 +85,7 @@ function Header() {
                     </Link>
                 </div>):(
                     <div className="header-user-actions">
-                        <span>{auth.user?auth.user.name:"My account"}</span>
+                        <span>{user?user.name:"My account"}</span>
 
                         <button className="logout-button" type="button" onClick={openLogoutDialog}>
                             Log out

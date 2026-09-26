@@ -55,7 +55,7 @@ function MyBookingsPage() {
                 }
 
                 if (!response.ok) {
-                    throw new Error('Failed to load your bookings.')
+                    throw new Error(`Failed to load your bookings. Status:${response.status}`)
                 }
 
                 const bookingData =
@@ -157,6 +157,121 @@ function MyBookingsPage() {
         )
     }
 
+    const sortedBookings = [...bookings].sort(
+        (firstBooking, secondBooking) =>
+            new Date(secondBooking.createdAt).getTime()
+            - new Date(firstBooking.createdAt).getTime(),
+    )
+
+    const upcomingBookings = sortedBookings.filter(
+        (booking) =>
+            booking.status === 'PENDING_PAYMENT'
+            || (
+                booking.status === 'CONFIRMED'
+                && new Date(booking.endAt).getTime()
+                >= Date.now()
+            ),
+    )
+
+    const historyBookings = sortedBookings.filter(
+        (booking) =>
+            booking.status === 'CANCELLED'
+            || booking.status === 'EXPIRED'
+            || (
+                booking.status === 'CONFIRMED'
+                && new Date(booking.endAt).getTime()
+                < Date.now()
+            ),
+    )
+
+    function renderBookingCard(booking: BookingResponse) {
+        return (
+            <article
+                className="booking-card"
+                key={booking.id}
+            >
+                <div className="booking-card-heading">
+                    <div>
+                        <p className="booking-reference">
+                            Booking #{booking.id}
+                        </p>
+
+                        <h3>{booking.venueName}</h3>
+                    </div>
+
+                    <span
+                        className={`booking-status ${booking.status.toLowerCase()}`}
+                    >
+                        {formatStatus(booking.status)}
+                    </span>
+                </div>
+
+                <div className="booking-details">
+                    <p>
+                        <span>Court</span>
+                        Court {booking.courtNumber}
+                    </p>
+
+                    <p>
+                        <span>Sport</span>
+                        {booking.sport === 'BADMINTON'
+                            ? 'Badminton'
+                            : 'Pickleball'}
+                    </p>
+
+                    <p>
+                        <span>Start</span>
+                        {formatDateTime(booking.startAt)}
+                    </p>
+
+                    <p>
+                        <span>End</span>
+                        {formatDateTime(booking.endAt)}
+                    </p>
+
+                    <p>
+                        <span>Price</span>
+                        RM {booking.priceAtBooking.toFixed(2)}
+                    </p>
+                </div>
+
+                {booking.status === 'PENDING_PAYMENT' && (
+                    <p className="booking-expiry">
+                        Payment hold expires at{' '}
+                        {formatDateTime(booking.expiresAt)}
+                    </p>
+                )}
+
+                <div className="booking-card-actions">
+                    <Link
+                        to={`/venues/${booking.venueId}`}
+                    >
+                        View venue
+                    </Link>
+
+                    {booking.status === 'PENDING_PAYMENT' && (
+                        <button
+                            type="button"
+                            disabled={
+                                cancellingBookingId
+                                === booking.id
+                            }
+                            onClick={() =>
+                                void handleCancelBooking(
+                                    booking.id,
+                                )
+                            }
+                        >
+                            {cancellingBookingId === booking.id
+                                ? 'Cancelling...'
+                                : 'Cancel booking'}
+                        </button>
+                    )}
+                </div>
+            </article>
+        )
+    }
+
     return (
         <main className="my-bookings-page">
             <div className="my-bookings-heading">
@@ -193,95 +308,51 @@ function MyBookingsPage() {
                 </section>
             )}
 
-            {!isLoading && bookings.length > 0 && (
-                <div className="booking-list">
-                    {bookings.map((booking) => (
-                        <article
-                            className="booking-card"
-                            key={booking.id}
-                        >
-                            <div className="booking-card-heading">
-                                <div>
-                                    <p>
-                                        Booking #{booking.id}
-                                    </p>
-                                    <h2>{booking.venueName}</h2>
-                                </div>
+            {!isLoading && upcomingBookings.length > 0 && (
+                <section className="booking-section">
+                    <div className="booking-section-heading">
+                        <div>
+                            <h2>Upcoming Bookings</h2>
+                            <p>
+                                Your active reservations and
+                                pending payments.
+                            </p>
+                        </div>
 
-                                <span
-                                    className={`booking-status ${booking.status.toLowerCase()}`}
-                                >
-                                    {formatStatus(booking.status)}
-                                </span>
-                            </div>
+                        <span>
+                            {upcomingBookings.length}
+                        </span>
+                    </div>
 
-                            <div className="booking-details">
-                                <p>
-                                    <span>Court</span>
-                                    Court {booking.courtNumber}
-                                </p>
+                    <div className="booking-list">
+                        {upcomingBookings.map((booking) =>
+                            renderBookingCard(booking),
+                        )}
+                    </div>
+                </section>
+            )}
 
-                                <p>
-                                    <span>Sport</span>
-                                    {booking.sport === 'BADMINTON'
-                                        ? 'Badminton'
-                                        : 'Pickleball'}
-                                </p>
+            {!isLoading && historyBookings.length > 0 && (
+                <section className="booking-section booking-history-section">
+                    <div className="booking-section-heading">
+                        <div>
+                            <h2>Booking History</h2>
+                            <p>
+                                Your cancelled, expired and
+                                completed reservations.
+                            </p>
+                        </div>
 
-                                <p>
-                                    <span>Start</span>
-                                    {formatDateTime(booking.startAt)}
-                                </p>
+                        <span>
+                            {historyBookings.length}
+                        </span>
+                    </div>
 
-                                <p>
-                                    <span>End</span>
-                                    {formatDateTime(booking.endAt)}
-                                </p>
-
-                                <p>
-                                    <span>Price</span>
-                                    RM {booking.priceAtBooking.toFixed(2)}
-                                </p>
-                            </div>
-
-                            {booking.status === 'PENDING_PAYMENT' && (
-                                <p className="booking-expiry">
-                                    Payment hold expires at{' '}
-                                    {formatDateTime(booking.expiresAt)}
-                                </p>
-                            )}
-
-                            <div className="booking-card-actions">
-                                <Link
-                                    to={`/venues/${booking.venueId}`}
-                                >
-                                    View venue
-                                </Link>
-
-                                {booking.status ===
-                                    'PENDING_PAYMENT' && (
-                                    <button
-                                        type="button"
-                                        disabled={
-                                            cancellingBookingId ===
-                                            booking.id
-                                        }
-                                        onClick={() =>
-                                            void handleCancelBooking(
-                                                booking.id,
-                                            )
-                                        }
-                                    >
-                                        {cancellingBookingId ===
-                                        booking.id
-                                            ? 'Cancelling...'
-                                            : 'Cancel booking'}
-                                    </button>
-                                )}
-                            </div>
-                        </article>
-                    ))}
-                </div>
+                    <div className="booking-list">
+                        {historyBookings.map((booking) => renderBookingCard(booking),
+                        )}
+                    </div>
+                </section>
             )}
         </main>
     )

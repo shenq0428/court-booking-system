@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import VenueDetailsPage from './pages/VenueDetailsPage'
 import FindCourtPage from './pages/FindCourtPage'
 import MyBookingsPage from './pages/MyBookingsPage'
+import CustomerRoute from './auth/CustomerRoute'
 
 function App() {
   return (
@@ -37,11 +38,13 @@ function App() {
           path="/find-court"
           element={<FindCourtPage />}
         />
+        <Route element={<CustomerRoute />}>
+          <Route
+            path="/my-bookings"
+            element={<MyBookingsPage />}
+          />
+        </Route>
 
-        <Route
-         path="/my-bookings"
-         element={<MyBookingsPage/>}
-         />
       </Routes>
     </div>
   )
