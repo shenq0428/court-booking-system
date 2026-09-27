@@ -13,8 +13,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-public interface BookingRepository
-                extends JpaRepository<Booking, Long> {
+public interface BookingRepository extends JpaRepository<Booking, Long> {
 
         Optional<Booking> 
         findByIdAndUser_Id(
@@ -102,4 +101,5 @@ Optional<Booking> findOwnedBookingForUpdate(
         @Param("userId") Long userId
 );
 
+    long countByStatus(BookingStatus status);
 }

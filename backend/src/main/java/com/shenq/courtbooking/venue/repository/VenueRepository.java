@@ -17,6 +17,8 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
 
     Page<Venue> findAllByActiveTrue(Pageable pageable);
 
+    long countByActiveTrue();
+    
     @Query(value = """
             SELECT venue.*
             FROM venues venue
@@ -134,4 +136,6 @@ public interface VenueRepository extends JpaRepository<Venue, Long> {
             @Param("location") String location,
             @Param("sport") SportType sport,
             Pageable pageable);
+
+    
 }

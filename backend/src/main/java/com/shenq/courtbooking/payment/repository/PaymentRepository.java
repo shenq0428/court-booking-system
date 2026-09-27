@@ -13,9 +13,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
-public interface PaymentRepository
-                extends JpaRepository<Payment, Long> {
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
         List<Payment>// 查询某个 Booking 的所有付款尝试
                         findAllByBooking_IdOrderByCreatedAtDesc(
@@ -54,4 +54,16 @@ public interface PaymentRepository
         Optional<Payment> findByProviderSessionIdAndBooking_User_Id(
                         String providerSessionId,
                         Long userId);
+
+        long countByStatus(PaymentStatus status);
+
+        @Query("""
+            SELECT COALESCE(SUM(payment.amount),0)
+            FROM Payment payment
+            WHERE payment.status = :status
+            """)
+        BigDecimal sumAmountByStatus(
+          @Param("status") PaymentStatus status
+        );
+
 }

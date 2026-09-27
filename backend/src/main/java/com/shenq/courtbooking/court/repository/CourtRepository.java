@@ -29,4 +29,6 @@ public interface CourtRepository extends JpaRepository<Court,Long>{
             @Param("courtId")
             Long courtId
     );
+
+    long countByActiveTrue();
 }
